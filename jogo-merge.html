@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Soft Collapse - Juicy Merge</title>
+
+    <style>
+        /* ========================================
+           RESET E CONFIGURAÇÕES GERAIS
+        ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #1a1a2e;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        /* ========================================
+           CONTAINER PRINCIPAL
+        ======================================== */
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        }
+
+        /* ========================================
+           CANVAS
+        ======================================== */
+        #gameCanvas {
+            display: block;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            box-shadow: 0 0 40px rgba(100, 100, 255, 0.15);
+            max-width: 100%;
+            max-height: 85vh;
+            touch-action: none;
+        }
+
+        /* ========================================
+           UI SUPERIOR (SCORE + NEXT + COMBO)
+        ======================================== */
+        #ui-top {
+            position: absolute;
+            top: 12px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .ui-box {
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 8px 16px;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        #score-box {
+            min-width: 110px;
+            text-align: center;
+        }
+
+        #combo-box {
+            min-width: 90px;
+            text-align: center;
+            color: #ff9ff3;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        #combo-box.active {
+            opacity: 1;
+        }
+
+        #next-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 100px;
+        }
+
+        #next-preview {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* ========================================
+           TELA DE GAME OVER
+        ======================================== */
+        #game-over {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 10, 25, 0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            backdrop-filter: blur(6px);
+        }
+
+        #game-over h1 {
+            color: #ff6b9d;
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            text-shadow: 0 0 20px rgba(255, 107, 157, 0.4);
+        }
+
+        #game-over p {
+            color: #e0e0ff;
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+        }
+
+        #restart-btn {
+            background: linear-gradient(135deg, #ff6b9d, #c44569);
+            color: white;
+            border: none;
+            padding: 14px 36px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(255, 107, 157, 0.35);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        #restart-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* ========================================
+           GUIA INICIAL (PRIMEIRA VEZ)
+        ======================================== */
+        #guide-screen {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 10, 25, 0.92);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            padding: 24px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+
+        #guide-screen h2 {
+            color: #ff6b9d;
+            font-size: 1.6rem;
+            margin-bottom: 18px;
+        }
+
+        #guide-screen p {
+            color: #e0e0ff;
+            font-size: 1rem;
+            line-height: 1.6;
+            max-width: 320px;
+            margin-bottom: 12px;
+        }
+
+        #guide-btn {
+            margin-top: 20px;
+            background: linear-gradient(135deg, #54a0ff, #5f27cd);
+            color: white;
+            border: none;
+            padding: 14px 36px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(84, 160, 255, 0.35);
+        }
+
+        #guide-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* ========================================
+           INSTRUÇÃO INICIAL
+        ======================================== */
+        #hint {
+            position: absolute;
+            bottom: 24px;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            z-index: 5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+
+        <!-- UI Superior -->
+        <div id="ui-top">
+            <div class="ui-box" id="score-box">
+                Score: <span id="score-value">0</span>
+            </div>
+
+            <div class="ui-box" id="combo-box">
+                Combo x<span id="combo-value">1</span>
+            </div>
+
+            <div class="ui-box" id="next-box">
+                Next
+                <div id="next-preview"></div>
+            </div>
+        </div>
+
+        <!-- Canvas do jogo -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Dica -->
+        <div id="hint">Toque ou clique para soltar</div>
+
+        <!-- Tela de Game Over -->
+        <div id="game-over">
+            <h1>Game Over</h1>
+            <p>Score: <span id="final-score">0</span></p>
+            <button id="restart-btn">Jogar Novamente</button>
+        </div>
+
+        <!-- Guia da primeira vez -->
+        <div id="guide-screen">
+            <h2>Como Jogar</h2>
+            <p>Arraste para mirar e solte para dropar a bola.</p>
+            <p>Quando duas bolas do mesmo tipo se tocam, elas se fundem e viram uma maior.</p>
+            <p>Você perde se as bolas ultrapassarem a linha vermelha no topo por muito tempo.</p>
+            <p>Faça combos seguidos para multiplicar seus pontos!</p>
+            <button id="guide-btn">Entendi, vamos jogar</button>
+        </div>
+
+    </div>
+
+    <script>
+        // ================================================================
+        // CONFIGURAÇÕES GERAIS DO JOGO
+        // ================================================================
+        const CONFIG = {
+            gravity: 0.18,
+            friction: 0.99,
+            restitution: 0.45,
+            maxObjects: 80,
+            dropY: 60,
+            dangerLine: 110,
+            mergeCooldown: 80,
+            specialChance: 0.08
+        };
+
+
+        // ================================================================
+        // CORES E TAMANHOS DOS NÍVEIS (0 a 10)
+        // ================================================================
+        const LEVELS = [
+            { radius: 16, color: "#FF6B6B", score: 1  },
+            { radius: 20, color: "#FF9F43", score: 2  },
+            { radius: 24, color: "#FECA57", score: 4  },
+            { radius: 29, color: "#1DD1A1", score: 8  },
+            { radius: 34, color: "#54A0FF", score: 16 },
+            { radius: 40, color: "#5F27CD", score: 32 },
+            { radius: 46, color: "#FF9FF3", score: 64 },
+            { radius: 53, color: "#00D2D3", score: 128},
+            { radius: 60, color: "#FF6B9D", score: 256},
+            { radius: 68, color: "#C8D6E5", score: 512},
+            { radius: 78, color: "#FFD700", score: 1024}
+        ];
+
+
+        // ================================================================
+        // VARIÁVEIS DO CANVAS E CONTEXTO
+        // ================================================================
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let canvasWidth = 0;
+        let canvasHeight = 0;
+
+
+        // ================================================================
+        // ESTADO DO JOGO
+        // ================================================================
+        let objects = [];
+        let particles = [];
+        let score = 0;
+        let nextLevel = 0;
+        let nextIsSpecial = null;
+        let currentDrop = null;
+        let isDropping = false;
+        let gameOver = false;
+        let canDrop = true;
+
+
+        // ================================================================
+        // SISTEMA DE COMBO
+        // ================================================================
+        let comboCount = 0;
+        let comboTimer = 0;
+        let comboMultiplier = 1;
+
+
+        // ================================================================
+        // SCREEN SHAKE
+        // ================================================================
+        let shakeAmount = 0;
+
+
+        // ================================================================
+        // PROGRESSÃO (localStorage)
+        // ================================================================
+        let totalScore = parseInt(localStorage.getItem("softCollapse_totalScore") || "0");
+        let unlockedSkins = JSON.parse(localStorage.getItem("softCollapse_skins") || "[0]");
+
+
+        // ================================================================
+        // ELEMENTOS DA UI
+        // ================================================================
+        const scoreValue = document.getElementById("score-value");
+        const comboBox = document.getElementById("combo-box");
+        const comboValue = document.getElementById("combo-value");
+        const nextPreview = document.getElementById("next-preview");
+        const gameOverScreen = document.getElementById("game-over");
+        const finalScore = document.getElementById("final-score");
+        const restartBtn = document.getElementById("restart-btn");
+        const hint = document.getElementById("hint");
+        const guideScreen = document.getElementById("guide-screen");
+        const guideBtn = document.getElementById("guide-btn");
+
+
+        // ================================================================
+        // CLASSE: OBJETO (BOLA)
+        // ================================================================
+        class GameObject {
+            constructor(x, y, level, specialType = null) {
+                this.x = x;
+                this.y = y;
+                this.level = level;
+                this.specialType = specialType;
+
+                if (specialType === "rainbow") {
+                    this.radius = 26;
+                    this.color = "#FFFFFF";
+                } else if (specialType === "bomb") {
+                    this.radius = 24;
+                    this.color = "#333333";
+                } else {
+                    this.radius = LEVELS[level].radius;
+                    this.color = LEVELS[level].color;
+                }
+
+                this.vx = 0;
+                this.vy = 0;
+                this.merged = false;
+                this.id = Math.random();
+            }
+
+            update() {
+                this.vy += CONFIG.gravity;
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                this.vx *= CONFIG.friction;
+                this.vy *= CONFIG.friction;
+
+                if (this.x - this.radius < 0) {
+                    this.x = this.radius;
+                    this.vx *= -CONFIG.restitution;
+                }
+
+                if (this.x + this.radius > canvasWidth) {
+                    this.x = canvasWidth - this.radius;
+                    this.vx *= -CONFIG.restitution;
+                }
+
+                if (this.y + this.radius > canvasHeight) {
+                    this.y = canvasHeight - this.radius;
+                    this.vy *= -CONFIG.restitution;
+                    this.vx *= 0.92;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x + 3, this.y + 4, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+
+                if (this.specialType === "rainbow") {
+                    const gradient = ctx.createRadialGradient(
+                        this.x, this.y, 0,
+                        this.x, this.y, this.radius
+                    );
+                    gradient.addColorStop(0, "#FF6B6B");
+                    gradient.addColorStop(0.2, "#FECA57");
+                    gradient.addColorStop(0.4, "#1DD1A1");
+                    gradient.addColorStop(0.6, "#54A0FF");
+                    gradient.addColorStop(0.8, "#5F27CD");
+                    gradient.addColorStop(1, "#FF9FF3");
+                    ctx.fillStyle = gradient;
+                } else if (this.specialType === "bomb") {
+                    ctx.fillStyle = "#222222";
+                } else {
+                    const gradient = ctx.createRadialGradient(
+                        this.x - this.radius * 0.3,
+                        this.y - this.radius * 0.3,
+                        this.radius * 0.1,
+                        this.x,
+                        this.y,
+                        this.radius
+                    );
+                    gradient.addColorStop(0, lightenColor(this.color, 35));
+                    gradient.addColorStop(0.7, this.color);
+                    gradient.addColorStop(1, darkenColor(this.color, 25));
+                    ctx.fillStyle = gradient;
+                }
+
+                ctx.fill();
+
+                if (this.specialType === "bomb") {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius * 0.35, 0, Math.PI * 2);
+                    ctx.fillStyle = "#FF3333";
+                    ctx.fill();
+                } else if (!this.specialType) {
+                    ctx.beginPath();
+                    ctx.arc(
+                        this.x - this.radius * 0.3,
+                        this.y - this.radius * 0.3,
+                        this.radius * 0.25,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+                    ctx.fill();
+                }
+            }
+        }
+
+
+        // ================================================================
+        // CLASSE: PARTÍCULA LEVE (OTIMIZADA)
+        // ================================================================
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1.5 + Math.random() * 3;
+
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed - 1.5;
+
+                this.life = 1.0;
+                this.decay = 0.025 + Math.random() * 0.02;
+                this.size = 2 + Math.random() * 3;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.08;
+                this.life -= this.decay;
+            }
+
+            draw() {
+                ctx.globalAlpha = Math.max(0, this.life);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+
+        // ================================================================
+        // FUNÇÕES AUXILIARES DE COR
+        // ================================================================
+        function lightenColor(hex, percent) {
+            const num = parseInt(hex.replace("#", ""), 16);
+            const r = Math.min(255, (num >> 16) + percent);
+            const g = Math.min(255, ((num >> 8) & 0x00FF) + percent);
+            const b = Math.min(255, (num & 0x0000FF) + percent);
+
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        function darkenColor(hex, percent) {
+            const num = parseInt(hex.replace("#", ""), 16);
+            const r = Math.max(0, (num >> 16) - percent);
+            const g = Math.max(0, ((num >> 8) & 0x00FF) - percent);
+            const b = Math.max(0, (num & 0x0000FF) - percent);
+
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: AJUSTAR TAMANHO DO CANVAS
+        // ================================================================
+        function resizeCanvas() {
+            const maxWidth = Math.min(window.innerWidth - 20, 420);
+            const maxHeight = window.innerHeight - 100;
+
+            canvasWidth = maxWidth;
+            canvasHeight = Math.min(maxHeight, 680);
+
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+
+            canvas.style.width = canvasWidth + "px";
+            canvas.style.height = canvasHeight + "px";
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: CRIAR PRÓXIMO OBJETO PARA DROPAR
+        // ================================================================
+        function createNextDrop() {
+            nextIsSpecial = null;
+
+            if (Math.random() < CONFIG.specialChance) {
+                nextIsSpecial = Math.random() < 0.5 ? "rainbow" : "bomb";
+            }
+
+            nextLevel = Math.floor(Math.random() * 4);
+
+            if (nextIsSpecial === "rainbow") {
+                nextPreview.style.background = "linear-gradient(135deg, #FF6B6B, #FECA57, #1DD1A1, #54A0FF, #5F27CD)";
+            } else if (nextIsSpecial === "bomb") {
+                nextPreview.style.background = "#333333";
+            } else {
+                nextPreview.style.background = LEVELS[nextLevel].color;
+            }
+
+            const size = nextIsSpecial ? 22 : (LEVELS[nextLevel].radius * 0.7);
+            nextPreview.style.width = size + "px";
+            nextPreview.style.height = size + "px";
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: PREPARAR OBJETO ATUAL PARA DROPAR
+        // ================================================================
+        function prepareDrop(x) {
+            if (!canDrop || gameOver || isDropping) return;
+
+            const level = nextLevel;
+            const special = nextIsSpecial;
+            const radius = special ? 26 : LEVELS[level].radius;
+
+            let dropX = x;
+            dropX = Math.max(radius + 4, Math.min(canvasWidth - radius - 4, dropX));
+
+            currentDrop = new GameObject(dropX, CONFIG.dropY, level, special);
+            currentDrop.vy = 0;
+            currentDrop.vx = 0;
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: SOLTAR O OBJETO
+        // ================================================================
+        function dropObject() {
+            if (!currentDrop || isDropping || gameOver) return;
+
+            isDropping = true;
+            canDrop = false;
+
+            objects.push(currentDrop);
+            currentDrop = null;
+
+            createNextDrop();
+
+            setTimeout(() => {
+                canDrop = true;
+                isDropping = false;
+            }, 350);
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: DETECTAR E RESOLVER COLISÕES (CORRIGIDA - SEM CRASH)
+        // ================================================================
+        function handleCollisions() {
+            const merges = [];
+
+            for (let i = 0; i < objects.length; i++) {
+                for (let j = i + 1; j < objects.length; j++) {
+                    const a = objects[i];
+                    const b = objects[j];
+
+                    if (a.merged || b.merged) continue;
+
+                    const dx = b.x - a.x;
+                    const dy = b.y - a.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const minDist = a.radius + b.radius;
+
+                    if (dist < minDist && dist > 0) {
+                        const overlap = minDist - dist;
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+
+                        const totalMass = a.radius + b.radius;
+                        const ratioA = b.radius / totalMass;
+                        const ratioB = a.radius / totalMass;
+
+                        a.x -= nx * overlap * ratioA;
+                        a.y -= ny * overlap * ratioA;
+                        b.x += nx * overlap * ratioB;
+                        b.y += ny * overlap * ratioB;
+
+                        const dvx = a.vx - b.vx;
+                        const dvy = a.vy - b.vy;
+                        const impulse = (dvx * nx + dvy * ny);
+
+                        a.vx -= impulse * nx * CONFIG.restitution;
+                        a.vy -= impulse * ny * CONFIG.restitution;
+                        b.vx += impulse * nx * CONFIG.restitution;
+                        b.vy += impulse * ny * CONFIG.restitution;
+
+                        // Lógica de merge / especiais
+                        if (a.specialType === "bomb" || b.specialType === "bomb") {
+                            merges.push({ type: "bomb", a: a, b: b });
+                        } else if (a.specialType === "rainbow" || b.specialType === "rainbow") {
+                            merges.push({ type: "rainbow", a: a, b: b });
+                        } else if (a.level === b.level && a.level < LEVELS.length - 1) {
+                            merges.push({ type: "normal", a: a, b: b });
+                        }
+                    }
+                }
+            }
+
+            // Processa todos os merges DEPOIS do loop (evita crash)
+            for (let i = 0; i < merges.length; i++) {
+                const m = merges[i];
+
+                if (m.a.merged || m.b.merged) continue;
+
+                if (m.type === "bomb") {
+                    explodeBomb(m.a.specialType === "bomb" ? m.a : m.b);
+                } else if (m.type === "rainbow") {
+                    mergeRainbow(m.a, m.b);
+                } else {
+                    mergeObjects(m.a, m.b);
+                }
+            }
+
+            // Remove os que foram marcados
+            objects = objects.filter(obj => !obj.merged);
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: FUNDIR DOIS OBJETOS NORMAIS
+        // ================================================================
+        function mergeObjects(a, b) {
+            a.merged = true;
+            b.merged = true;
+
+            const newLevel = a.level + 1;
+            const newX = (a.x + b.x) / 2;
+            const newY = (a.y + b.y) / 2;
+
+            const merged = new GameObject(newX, newY, newLevel);
+            merged.vx = (a.vx + b.vx) * 0.3;
+            merged.vy = (a.vy + b.vy) * 0.3 - 1.5;
+
+            objects.push(merged);
+
+            // Combo
+            registerCombo();
+
+            const points = LEVELS[newLevel].score * comboMultiplier;
+            score += points;
+            scoreValue.textContent = score;
+
+            spawnParticles(newX, newY, LEVELS[newLevel].color, 8);
+            triggerShake(4);
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: MERGE COM BOLA ARCO-ÍRIS
+        // ================================================================
+        function mergeRainbow(a, b) {
+            a.merged = true;
+            b.merged = true;
+
+            const normal = a.specialType === "rainbow" ? b : a;
+            const newLevel = Math.min(normal.level + 1, LEVELS.length - 1);
+            const newX = (a.x + b.x) / 2;
+            const newY = (a.y + b.y) / 2;
+
+            const merged = new GameObject(newX, newY, newLevel);
+            merged.vx = (a.vx + b.vx) * 0.3;
+            merged.vy = (a.vy + b.vy) * 0.3 - 1.5;
+
+            objects.push(merged);
+
+            registerCombo();
+
+            const points = LEVELS[newLevel].score * comboMultiplier * 2;
+            score += points;
+            scoreValue.textContent = score;
+
+            spawnParticles(newX, newY, "#FFFFFF", 12);
+            triggerShake(6);
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: EXPLODIR BOMBA
+        // ================================================================
+        function explodeBomb(bomb) {
+            bomb.merged = true;
+
+            const radius = 90;
+
+            for (let i = 0; i < objects.length; i++) {
+                const obj = objects[i];
+
+                if (obj.merged || obj === bomb) continue;
+
+                const dx = obj.x - bomb.x;
+                const dy = obj.y - bomb.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < radius) {
+                    obj.merged = true;
+                    spawnParticles(obj.x, obj.y, obj.color, 5);
+                }
+            }
+
+            spawnParticles(bomb.x, bomb.y, "#FF3333", 14);
+            triggerShake(8);
+
+            registerCombo();
+            score += 50 * comboMultiplier;
+            scoreValue.textContent = score;
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: REGISTRAR COMBO
+        // ================================================================
+        function registerCombo() {
+            comboCount++;
+            comboTimer = 90;
+
+            comboMultiplier = Math.min(1 + Math.floor(comboCount / 2), 8);
+
+            comboValue.textContent = comboMultiplier;
+            comboBox.classList.add("active");
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: ATUALIZAR COMBO
+        // ================================================================
+        function updateCombo() {
+            if (comboTimer > 0) {
+                comboTimer--;
+
+                if (comboTimer <= 0) {
+                    comboCount = 0;
+                    comboMultiplier = 1;
+                    comboBox.classList.remove("active");
+                }
+            }
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: CRIAR PARTÍCULAS (OTIMIZADO)
+        // ================================================================
+        function spawnParticles(x, y, color, count) {
+            if (particles.length > 40) return;
+
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: SCREEN SHAKE
+        // ================================================================
+        function triggerShake(amount) {
+            shakeAmount = Math.max(shakeAmount, amount);
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: VERIFICAR GAME OVER
+        // ================================================================
+        function checkGameOver() {
+            let dangerCount = 0;
+
+            for (let i = 0; i < objects.length; i++) {
+                const obj = objects[i];
+
+                if (obj.y - obj.radius < CONFIG.dangerLine + 25 && Math.abs(obj.vy) < 1.2) {
+                    dangerCount++;
+                }
+            }
+
+            if (dangerCount >= 4) {
+                triggerGameOver();
+            }
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: ATIVAR GAME OVER
+        // ================================================================
+        function triggerGameOver() {
+            if (gameOver) return;
+
+            gameOver = true;
+            finalScore.textContent = score;
+
+            // Salva progresso
+            totalScore += score;
+            localStorage.setItem("softCollapse_totalScore", totalScore.toString());
+
+            gameOverScreen.style.display = "flex";
+            hint.style.display = "none";
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: REINICIAR O JOGO
+        // ================================================================
+        function restartGame() {
+            objects = [];
+            particles = [];
+            score = 0;
+            gameOver = false;
+            canDrop = true;
+            isDropping = false;
+            currentDrop = null;
+            comboCount = 0;
+            comboMultiplier = 1;
+            comboTimer = 0;
+            shakeAmount = 0;
+
+            scoreValue.textContent = "0";
+            comboBox.classList.remove("active");
+            gameOverScreen.style.display = "none";
+            hint.style.display = "block";
+
+            createNextDrop();
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: DESENHAR LINHA DE PERIGO (COM PISCA)
+        // ================================================================
+        function drawDangerLine() {
+            let nearDanger = false;
+
+            for (let i = 0; i < objects.length; i++) {
+                if (objects[i].y - objects[i].radius < CONFIG.dangerLine + 50) {
+                    nearDanger = true;
+                    break;
+                }
+            }
+
+            ctx.beginPath();
+            ctx.setLineDash([6, 6]);
+            ctx.moveTo(0, CONFIG.dangerLine);
+            ctx.lineTo(canvasWidth, CONFIG.dangerLine);
+
+            if (nearDanger) {
+                const pulse = 0.35 + Math.sin(Date.now() / 150) * 0.25;
+                ctx.strokeStyle = `rgba(255, 60, 60, ${pulse})`;
+                ctx.lineWidth = 3;
+            } else {
+                ctx.strokeStyle = "rgba(255, 80, 80, 0.3)";
+                ctx.lineWidth = 2;
+            }
+
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+
+        // ================================================================
+        // FUNÇÃO: LOOP PRINCIPAL
+        // ================================================================
+        function gameLoop() {
+            ctx.save();
+
+            // Screen shake
+            if (shakeAmount > 0) {
+                const sx = (Math.random() - 0.5) * shakeAmount;
+                const sy = (Math.random() - 0.5) * shakeAmount;
+                ctx.translate(sx, sy);
+                shakeAmount *= 0.9;
+
+                if (shakeAmount < 0.5) shakeAmount = 0;
+            }
+
+            ctx.clearRect(-10, -10, canvasWidth + 20, canvasHeight + 20);
+
+            drawDangerLine();
+
+            for (let i = 0; i < objects.length; i++) {
+                objects[i].update();
+                objects[i].draw();
+            }
+
+            if (currentDrop) {
+                currentDrop.draw();
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            if (!gameOver) {
+                handleCollisions();
+                checkGameOver();
+                updateCombo();
+            }
+
+            ctx.restore();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+
+        // ================================================================
+        // EVENTOS DE INPUT (MOUSE + TOUCH)
+        // ================================================================
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX;
+
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+            } else {
+                clientX = e.clientX;
+            }
+
+            return (clientX - rect.left) * (canvas.width / rect.width);
+        }
+
+        canvas.addEventListener("mousemove", (e) => {
+            if (gameOver || isDropping) return;
+            const x = getPos(e);
+            prepareDrop(x);
+        });
+
+        canvas.addEventListener("click", () => {
+            dropObject();
+        });
+
+        canvas.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            if (gameOver || isDropping) return;
+            const x = getPos(e);
+            prepareDrop(x);
+        }, { passive: false });
+
+        canvas.addEventListener("touchmove", (e) => {
+            e.preventDefault();
+            if (gameOver || isDropping) return;
+            const x = getPos(e);
+            prepareDrop(x);
+        }, { passive: false });
+
+        canvas.addEventListener("touchend", (e) => {
+            e.preventDefault();
+            dropObject();
+        }, { passive: false });
+
+        restartBtn.addEventListener("click", restartGame);
+
+        guideBtn.addEventListener("click", () => {
+            guideScreen.style.display = "none";
+            localStorage.setItem("softCollapse_guideSeen", "true");
+            hint.style.display = "block";
+        });
+
+
+        // ================================================================
+        // INICIALIZAÇÃO
+        // ================================================================
+        function init() {
+            resizeCanvas();
+            createNextDrop();
+
+            const guideSeen = localStorage.getItem("softCollapse_guideSeen");
+
+            if (!guideSeen) {
+                guideScreen.style.display = "flex";
+                hint.style.display = "none";
+            }
+
+            gameLoop();
+        }
+
+        window.addEventListener("resize", () => {
+            resizeCanvas();
+        });
+
+        document.body.addEventListener("touchmove", (e) => {
+            if (e.target === canvas) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        init();
+    </script>
+</body>
+</html>
