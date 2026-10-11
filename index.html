@@ -357,19 +357,19 @@
         // NÍVEIS DAS BOLAS (13 níveis - 0 a 12)
         // ================================================================
         const LEVELS = [
-            { radius: 15, color: "#FF6B6B", score: 1     },
-            { radius: 19, color: "#FF9F43", score: 2     },
-            { radius: 23, color: "#FECA57", score: 4     },
-            { radius: 28, color: "#1DD1A1", score: 8     },
-            { radius: 33, color: "#54A0FF", score: 16    },
-            { radius: 39, color: "#5F27CD", score: 32    },
-            { radius: 45, color: "#FF9FF3", score: 64    },
-            { radius: 52, color: "#00D2D3", score: 128   },
-            { radius: 60, color: "#FF6B9D", score: 256   },
-            { radius: 68, color: "#C8D6E5", score: 512   },
-            { radius: 78, color: "#FFD700", score: 1024  },
-            { radius: 88, color: "#A855F7", score: 2048  },
-            { radius: 98, color: "#22D3EE", score: 4096  }
+            { radius: 15, color: "#FF6B6B", score: 1     },  // 0  vermelho
+            { radius: 19, color: "#FF9F43", score: 2     },  // 1  laranja
+            { radius: 23, color: "#FECA57", score: 4     },  // 2  amarelo
+            { radius: 28, color: "#1DD1A1", score: 8     },  // 3  verde
+            { radius: 33, color: "#54A0FF", score: 16    },  // 4  azul
+            { radius: 39, color: "#5F27CD", score: 32    },  // 5  roxo
+            { radius: 45, color: "#FF9FF3", score: 64    },  // 6  rosa
+            { radius: 52, color: "#00D2D3", score: 128   },  // 7  ciano
+            { radius: 60, color: "#FF6B9D", score: 256   },  // 8  pink
+            { radius: 70, color: "#E2E8F0", score: 512   },  // 9  prata clara
+            { radius: 82, color: "#FFD700", score: 1024  },  // 10 ouro
+            { radius: 94, color: "#C084FC", score: 2048  },  // 11 lavanda / roxo claro (NOVO)
+            { radius: 108,color: "#2DD4BF", score: 4096  }   // 12 turquesa (NOVO)
         ];
 
 
@@ -938,19 +938,20 @@
         // GAME OVER (CORRIGIDO)
         // ================================================================
         function checkLose() {
-            let danger = false;
+            let dangerCount = 0;
 
             for (let i = 0; i < balls.length; i++) {
                 const b = balls[i];
-                if (b.y - b.r < CONFIG.dangerLine && Math.abs(b.vy) < 1.5) {
-                    danger = true;
-                    break;
+                // Qualquer bola que esteja acima ou tocando a linha
+                if (b.y - b.r < CONFIG.dangerLine + 8) {
+                    dangerCount += 1;
                 }
             }
 
-            if (danger) {
+            if (dangerCount >= 1) {
                 dangerTimer += 1;
-                if (dangerTimer > 55) {
+                // ~0.7 segundo acima da linha já dispara o game over
+                if (dangerTimer > 40) {
                     endGame();
                 }
             } else {
