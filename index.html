@@ -372,10 +372,10 @@
             specialChance: 0.07
         };
 
-
         // ================================================================
         // NÍVEIS DAS BOLAS (13 níveis - 0 a 12)
         // ================================================================
+
         const LEVELS = [
             { radius: 15, color: "#FF6B6B", score: 1     },  // 0  vermelho
             { radius: 19, color: "#FF9F43", score: 2     },  // 1  laranja
@@ -392,10 +392,10 @@
             { radius: 108,color: "#2DD4BF", score: 4096  }   // 12 turquesa (NOVO)
         ];
 
-
         // ================================================================
         // SONS
         // ================================================================
+
         const sfxPop = new Audio("pop.mp3");
         const sfxBomb = new Audio("bomb.wav");
 
@@ -429,20 +429,20 @@
             sfxBomb.play().catch(function () {});
         }
 
-
         // ================================================================
         // CANVAS
         // ================================================================
+
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d", { alpha: false });
 
         let W = 0;
         let H = 0;
 
-
         // ================================================================
         // ESTADO DO JOGO
         // ================================================================
+
         let balls = [];
         let particles = [];
         let score = 0;
@@ -464,18 +464,18 @@
         let highestLevelReached = 0;
         let dangerTimer = 0;
 
-
         // ================================================================
         // COMBO
         // ================================================================
+
         let combo = 0;
         let comboTimer = 0;
         let multiplier = 1;
 
-
         // ================================================================
         // UI ELEMENTS
         // ================================================================
+
         const elScore = document.getElementById("score-value");
         const elRecord = document.getElementById("record-value");
         const elCombo = document.getElementById("combo-box");
@@ -490,10 +490,10 @@
         const elGuide = document.getElementById("guide-screen");
         const elGuideBtn = document.getElementById("guide-btn");
 
-
         // ================================================================
         // CLASSE BOLA
         // ================================================================
+
         class Ball {
             constructor(x, y, level, special) {
                 this.x = x;
@@ -503,6 +503,7 @@
                 this.vx = 0;
                 this.vy = 0;
                 this.alive = true;
+                this.passedBelowDangerLine = false;
                 this.id = Math.random().toString(36).slice(2);
 
                 if (this.special === "rainbow") {
@@ -733,6 +734,7 @@
         // ================================================================
         // PREPARAR DROP (usa a bola HELD)
         // ================================================================
+
         function prepare(x) {
             if (!canDrop || gameOver) return;
 
@@ -744,10 +746,10 @@
             current = new Ball(px, CONFIG.dropY, heldLevel, heldSpecial);
         }
 
-
         // ================================================================
         // SOLTAR
         // ================================================================
+
         function drop() {
             if (!current || !canDrop || gameOver) return;
 
@@ -778,6 +780,7 @@
         // ================================================================
         // FÍSICA + MERGE
         // ================================================================
+
         function physics() {
             if (balls.length > CONFIG.maxBalls) {
                 balls.length = CONFIG.maxBalls;
@@ -862,6 +865,7 @@
         // ================================================================
         // MERGE NORMAL
         // ================================================================
+
         function doNormal(a, b) {
             a.alive = false;
             b.alive = false;
@@ -885,10 +889,10 @@
             playPop();
         }
 
-
         // ================================================================
         // MERGE RAINBOW
         // ================================================================
+
         function doRainbow(a, b) {
             a.alive = false;
             b.alive = false;
@@ -913,10 +917,10 @@
             playPop();
         }
 
-
         // ================================================================
         // BOMBA
-        // ================================================================
+        //================================================================
+
         function doBomb(bomb) {
             bomb.alive = false;
             const radius = 80;
@@ -939,10 +943,10 @@
             playBomb();
         }
 
-
         // ================================================================
         // SCORE + COMBO
         // ================================================================
+
         function addScore(base) {
             combo += 1;
             comboTimer = 75;
@@ -965,10 +969,10 @@
             }
         }
 
-
         // ================================================================
         // PARTÍCULAS
         // ================================================================
+
         function spawn(x, y, color, n) {
             if (particles.length > 35) return;
             for (let i = 0; i < n; i++) {
@@ -978,18 +982,41 @@
 
         // ================================================================
         // GAME OVER (CORRIGIDO)
-        // ================================================================
-
+        // ================================================================  
         
         function checkLose() {
+            let danger = false;
+
             for (let i = 0; i < balls.length; i++) {
                 const b = balls[i];
 
-                // Game Over quando a bola ultrapassar a linha vermelha
-                if (b.alive && b.y - b.r < CONFIG.dangerLine) {
+                if (!b.alive) continue;
+
+                // Primeiro, a bola precisa passar completamente para baixo da linha.
+                if (b.y - b.r >= CONFIG.dangerLine) {
+                    b.passedBelowDangerLine = true;
+                }
+
+                // Depois, se voltar para cima e ultrapassar a linha, há perigo.
+                if (
+                    b.passedBelowDangerLine &&
+                    b.y - b.r < CONFIG.dangerLine
+                ) {
+                    danger = true;
+                    break;
+                }
+            }
+
+            // Mantém uma pequena tolerância para evitar Game Over instantâneo.
+            if (danger) {
+                dangerTimer++;
+
+                if (dangerTimer >= 48) {
                     endGame();
                     return;
                 }
+            } else {
+                dangerTimer = 0;
             }
         }
 
