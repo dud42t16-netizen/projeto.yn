@@ -80,12 +80,19 @@
         }
 
         #score-box {
-            min-width: 108px;
+            min-width: 100px;
             text-align: center;
         }
 
+        #record-box {
+            min-width: 100px;
+            text-align: center;
+            color: #ffd700;
+            font-size: 13px;
+        }
+
         #combo-box {
-            min-width: 86px;
+            min-width: 80px;
             text-align: center;
             color: #ff9ff3;
             opacity: 0;
@@ -291,6 +298,10 @@
                 Score: <span id="score-value">0</span>
             </div>
 
+            <div class="ui-box" id="record-box">
+                Recorde: <span id="record-value">0</span>
+            </div>
+
             <div class="ui-box" id="combo-box">
                 Combo x<span id="combo-value">1</span>
             </div>
@@ -427,8 +438,15 @@
         let particles = [];
         let score = 0;
         let highScore = parseInt(localStorage.getItem("sc_high") || "0");
+
+        // Bola que o jogador está segurando agora
+        let heldLevel = 0;
+        let heldSpecial = null;
+
+        // Bola que vai vir DEPOIS (mostrada no preview)
         let nextLevel = 0;
         let nextSpecial = null;
+
         let current = null;
         let canDrop = true;
         let gameOver = false;
@@ -450,6 +468,7 @@
         // UI ELEMENTS
         // ================================================================
         const elScore = document.getElementById("score-value");
+        const elRecord = document.getElementById("record-value");
         const elCombo = document.getElementById("combo-box");
         const elComboVal = document.getElementById("combo-value");
         const elNext = document.getElementById("next-preview");
@@ -648,17 +667,15 @@
 
 
         // ================================================================
-        // PRÓXIMA BOLA (PROGRESSÃO MELHORADA)
+        // GERA UMA BOLA ALEATÓRIA (nível + especial)
         // ================================================================
-        function makeNext() {
-            nextSpecial = null;
-
+        function generateBallData() {
+            let special = null;
             if (Math.random() < CONFIG.specialChance) {
-                nextSpecial = Math.random() < 0.55 ? "rainbow" : "bomb";
+                special = Math.random() < 0.55 ? "rainbow" : "bomb";
             }
 
             let maxLevel = 3;
-
             if (score > 200)  maxLevel = 4;
             if (score > 500)  maxLevel = 5;
             if (score > 1000) maxLevel = 5;
@@ -681,8 +698,15 @@
                 level = Math.floor(Math.random() * (maxLevel + 1));
             }
 
-            nextLevel = Math.min(level, maxLevel);
+            level = Math.min(level, maxLevel);
+            return { level: level, special: special };
+        }
 
+
+        // ================================================================
+        // ATUALIZA O PREVIEW (mostra a bola NEXT, não a que está na mão)
+        // ================================================================
+        function updatePreview() {
             if (nextSpecial === "rainbow") {
                 elNext.style.background = "linear-gradient(135deg,#FF6B6B,#FECA57,#1DD1A1,#54A0FF,#5F27CD)";
             } else if (nextSpecial === "bomb") {
@@ -698,17 +722,17 @@
 
 
         // ================================================================
-        // PREPARAR DROP
+        // PREPARAR DROP (usa a bola HELD)
         // ================================================================
         function prepare(x) {
             if (!canDrop || gameOver) return;
 
             lastX = x;
 
-            const r = nextSpecial ? 25 : LEVELS[nextLevel].radius;
+            const r = heldSpecial ? 25 : LEVELS[heldLevel].radius;
             const px = Math.max(r + 2, Math.min(W - r - 2, x));
 
-            current = new Ball(px, CONFIG.dropY, nextLevel, nextSpecial);
+            current = new Ball(px, CONFIG.dropY, heldLevel, heldSpecial);
         }
 
 
@@ -723,7 +747,17 @@
             balls.push(current);
             current = null;
 
-            makeNext();
+            // A bola que estava no preview vira a que o jogador segura agora
+            heldLevel = nextLevel;
+            heldSpecial = nextSpecial;
+
+            // Gera a próxima de verdade (a que vai aparecer no preview)
+            const data = generateBallData();
+            nextLevel = data.level;
+            nextSpecial = data.special;
+            updatePreview();
+
+            // Coloca a nova bola held na mão
             prepare(lastX);
 
             setTimeout(function () {
@@ -938,20 +972,21 @@
         // GAME OVER (CORRIGIDO)
         // ================================================================
         function checkLose() {
-            let dangerCount = 0;
+            let overLine = false;
 
             for (let i = 0; i < balls.length; i++) {
                 const b = balls[i];
-                // Qualquer bola que esteja acima ou tocando a linha
-                if (b.y - b.r < CONFIG.dangerLine + 8) {
-                    dangerCount += 1;
+                // Se o topo da bola passou da linha vermelha
+                if (b.y - b.r < CONFIG.dangerLine) {
+                    overLine = true;
+                    break;
                 }
             }
 
-            if (dangerCount >= 1) {
+            if (overLine) {
                 dangerTimer += 1;
-                // ~0.7 segundo acima da linha já dispara o game over
-                if (dangerTimer > 40) {
+                // ~0.5 segundo (30 frames) já é game over
+                if (dangerTimer > 30) {
                     endGame();
                 }
             } else {
@@ -972,6 +1007,7 @@
 
             elFinal.textContent = score;
             elFinalRecord.textContent = highScore;
+            elRecord.textContent = highScore;
             elNewRecord.style.display = isNew ? "block" : "none";
             elGameOver.style.display = "flex";
             elHint.style.display = "none";
@@ -996,7 +1032,16 @@
             elGameOver.style.display = "none";
             elHint.style.display = "block";
 
-            makeNext();
+            // Gera a bola da mão e a do preview
+            const held = generateBallData();
+            heldLevel = held.level;
+            heldSpecial = held.special;
+
+            const nxt = generateBallData();
+            nextLevel = nxt.level;
+            nextSpecial = nxt.special;
+            updatePreview();
+
             prepare(lastX);
         }
 
@@ -1127,7 +1172,20 @@
         // ================================================================
         function start() {
             resize();
-            makeNext();
+
+            // Gera a bola da mão e a do preview
+            const held = generateBallData();
+            heldLevel = held.level;
+            heldSpecial = held.special;
+
+            const nxt = generateBallData();
+            nextLevel = nxt.level;
+            nextSpecial = nxt.special;
+            updatePreview();
+
+            // Mostra o recorde na tela
+            elRecord.textContent = highScore;
+
             prepare(lastX);
 
             if (!localStorage.getItem("sc_guide")) {
