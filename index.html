@@ -976,34 +976,23 @@
             }
         }
 
-
         // ================================================================
         // GAME OVER (CORRIGIDO)
         // ================================================================
-        function checkLose() {
-            let danger = false;
 
+        
+        function checkLose() {
             for (let i = 0; i < balls.length; i++) {
                 const b = balls[i];
 
-                // Só conta se a bola está ACIMA da linha E quase parada
-                // (evita falso positivo de bola caindo ou quicando)
-                if (b.y - b.r < CONFIG.dangerLine && Math.abs(b.vy) < 1.2 && Math.abs(b.vx) < 1.2) {
-                    danger = true;
-                    break;
-                }
-            }
-
-            if (danger) {
-                dangerTimer += 1;
-                // Precisa ficar ~0.8 segundo parado acima da linha
-                if (dangerTimer > 48) {
+                // Game Over quando a bola ultrapassar a linha vermelha
+                if (b.alive && b.y - b.r < CONFIG.dangerLine) {
                     endGame();
+                    return;
                 }
-            } else {
-                dangerTimer = 0;
             }
         }
+
 
         function endGame() {
             if (gameOver) return;
