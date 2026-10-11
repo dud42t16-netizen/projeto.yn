@@ -137,7 +137,13 @@
         #game-over p {
             color: #c8c4e0;
             font-size: 1.15rem;
-            margin-bottom: 28px;
+            margin-bottom: 8px;
+        }
+
+        #game-over .record {
+            color: #ffd700;
+            font-size: 1rem;
+            margin-bottom: 24px;
         }
 
         #restart-btn {
@@ -246,6 +252,7 @@
         <div id="game-over">
             <h1>Game Over</h1>
             <p>Score: <span id="final-score">0</span></p>
+            <p class="record">Recorde: <span id="final-record">0</span></p>
             <button id="restart-btn">Jogar Novamente</button>
         </div>
 
@@ -294,6 +301,26 @@
 
 
         // ================================================================
+        // SONS
+        // ================================================================
+        const sfxPop = new Audio("pop.mp3");
+        const sfxBomb = new Audio("bomb.wav");
+
+        sfxPop.volume = 0.55;
+        sfxBomb.volume = 0.6;
+
+        function playPop() {
+            sfxPop.currentTime = 0;
+            sfxPop.play().catch(function () {});
+        }
+
+        function playBomb() {
+            sfxBomb.currentTime = 0;
+            sfxBomb.play().catch(function () {});
+        }
+
+
+        // ================================================================
         // CANVAS
         // ================================================================
         const canvas = document.getElementById("gameCanvas");
@@ -309,12 +336,15 @@
         let balls = [];
         let particles = [];
         let score = 0;
+        let highScore = parseInt(localStorage.getItem("sc_high") || "0");
         let nextLevel = 0;
         let nextSpecial = null;
         let current = null;
         let canDrop = true;
         let gameOver = false;
         let shake = 0;
+        let lastX = 0;
+        let highestLevelReached = 0;
 
 
         // ================================================================
@@ -334,6 +364,7 @@
         const elNext = document.getElementById("next-preview");
         const elGameOver = document.getElementById("game-over");
         const elFinal = document.getElementById("final-score");
+        const elFinalRecord = document.getElementById("final-record");
         const elRestart = document.getElementById("restart-btn");
         const elHint = document.getElementById("hint");
         const elGuide = document.getElementById("guide-screen");
@@ -525,11 +556,13 @@
             canvas.height = H;
             canvas.style.width = W + "px";
             canvas.style.height = H + "px";
+
+            lastX = W / 2;
         }
 
 
         // ================================================================
-        // PRÓXIMA BOLA
+        // PRÓXIMA BOLA (COM PROGRESSÃO)
         // ================================================================
         function makeNext() {
             nextSpecial = null;
@@ -538,7 +571,17 @@
                 nextSpecial = Math.random() < 0.55 ? "rainbow" : "bomb";
             }
 
-            nextLevel = Math.floor(Math.random() * 4);
+            // Progressão: quanto maior o nível já alcançado, maiores as bolas que podem vir
+            let maxLevel = 3;
+
+            if (highestLevelReached >= 4) maxLevel = 4;
+            if (highestLevelReached >= 5) maxLevel = 5;
+            if (highestLevelReached >= 6) maxLevel = 5;
+            if (score > 600) maxLevel = Math.max(maxLevel, 4);
+            if (score > 1500) maxLevel = Math.max(maxLevel, 5);
+            if (score > 3000) maxLevel = Math.max(maxLevel, 6);
+
+            nextLevel = Math.floor(Math.random() * (maxLevel + 1));
 
             if (nextSpecial === "rainbow") {
                 elNext.style.background = "linear-gradient(135deg,#FF6B6B,#FECA57,#1DD1A1,#54A0FF,#5F27CD)";
@@ -560,6 +603,8 @@
         function prepare(x) {
             if (!canDrop || gameOver) return;
 
+            lastX = x;
+
             const r = nextSpecial ? 25 : LEVELS[nextLevel].radius;
             const px = Math.max(r + 2, Math.min(W - r - 2, x));
 
@@ -576,7 +621,11 @@
             canDrop = false;
             balls.push(current);
             current = null;
+
             makeNext();
+
+            // Aparece a próxima bola imediatamente
+            prepare(lastX);
 
             setTimeout(function () {
                 canDrop = true;
@@ -686,6 +735,10 @@
             const nx = (a.x + b.x) / 2;
             const ny = (a.y + b.y) / 2;
 
+            if (lvl > highestLevelReached) {
+                highestLevelReached = lvl;
+            }
+
             const neu = new Ball(nx, ny, lvl, null);
             neu.vx = (a.vx + b.vx) * 0.2;
             neu.vy = (a.vy + b.vy) * 0.2 - 1.0;
@@ -694,6 +747,7 @@
             addScore(LEVELS[lvl].score);
             spawn(nx, ny, LEVELS[lvl].color, 6);
             shake = Math.max(shake, 3);
+            playPop();
         }
 
 
@@ -709,6 +763,10 @@
             const nx = (a.x + b.x) / 2;
             const ny = (a.y + b.y) / 2;
 
+            if (lvl > highestLevelReached) {
+                highestLevelReached = lvl;
+            }
+
             const neu = new Ball(nx, ny, lvl, null);
             neu.vx = (a.vx + b.vx) * 0.2;
             neu.vy = (a.vy + b.vy) * 0.2 - 1.0;
@@ -717,6 +775,7 @@
             addScore(LEVELS[lvl].score * 2);
             spawn(nx, ny, "#ffffff", 9);
             shake = Math.max(shake, 5);
+            playPop();
         }
 
 
@@ -742,6 +801,7 @@
             spawn(bomb.x, bomb.y, "#ff3333", 11);
             shake = Math.max(shake, 7);
             addScore(40);
+            playBomb();
         }
 
 
@@ -801,7 +861,14 @@
         function endGame() {
             if (gameOver) return;
             gameOver = true;
+
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem("sc_high", highScore.toString());
+            }
+
             elFinal.textContent = score;
+            elFinalRecord.textContent = highScore;
             elGameOver.style.display = "flex";
             elHint.style.display = "none";
         }
@@ -817,12 +884,15 @@
             multiplier = 1;
             comboTimer = 0;
             shake = 0;
+            highestLevelReached = 0;
 
             elScore.textContent = "0";
             elCombo.classList.remove("show");
             elGameOver.style.display = "none";
             elHint.style.display = "block";
+
             makeNext();
+            prepare(lastX);
         }
 
 
@@ -946,15 +1016,18 @@
             elGuide.style.display = "none";
             localStorage.setItem("sc_guide", "1");
             elHint.style.display = "block";
+            prepare(lastX);
         });
+
 
         // ================================================================
         // START
         // ================================================================
-
+        
         function start() {
             resize();
             makeNext();
+            prepare(lastX);
 
             if (!localStorage.getItem("sc_guide")) {
                 elGuide.style.display = "flex";
