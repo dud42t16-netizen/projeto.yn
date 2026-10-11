@@ -79,6 +79,12 @@
             border: 1px solid rgba(255, 255, 255, 0.07);
         }
 
+        #left-ui {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
         #score-box {
             min-width: 100px;
             text-align: center;
@@ -88,7 +94,9 @@
             min-width: 100px;
             text-align: center;
             color: #ffd700;
-            font-size: 13px;
+            font-size: 12px;
+            padding: 5px 12px;
+            opacity: 0.9;
         }
 
         #combo-box {
@@ -294,12 +302,13 @@
     <div id="game-container">
 
         <div id="ui-top">
-            <div class="ui-box" id="score-box">
-                Score: <span id="score-value">0</span>
-            </div>
-
-            <div class="ui-box" id="record-box">
-                Recorde: <span id="record-value">0</span>
+            <div id="left-ui">
+                <div class="ui-box" id="score-box">
+                    Score: <span id="score-value">0</span>
+                </div>
+                <div class="ui-box" id="record-box">
+                    Recorde: <span id="record-value">0</span>
+                </div>
             </div>
 
             <div class="ui-box" id="combo-box">
@@ -972,21 +981,23 @@
         // GAME OVER (CORRIGIDO)
         // ================================================================
         function checkLose() {
-            let overLine = false;
+            let danger = false;
 
             for (let i = 0; i < balls.length; i++) {
                 const b = balls[i];
-                // Se o topo da bola passou da linha vermelha
-                if (b.y - b.r < CONFIG.dangerLine) {
-                    overLine = true;
+
+                // Só conta se a bola está ACIMA da linha E quase parada
+                // (evita falso positivo de bola caindo ou quicando)
+                if (b.y - b.r < CONFIG.dangerLine && Math.abs(b.vy) < 1.2 && Math.abs(b.vx) < 1.2) {
+                    danger = true;
                     break;
                 }
             }
 
-            if (overLine) {
+            if (danger) {
                 dangerTimer += 1;
-                // ~0.5 segundo (30 frames) já é game over
-                if (dangerTimer > 30) {
+                // Precisa ficar ~0.8 segundo parado acima da linha
+                if (dangerTimer > 48) {
                     endGame();
                 }
             } else {
