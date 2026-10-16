@@ -4,1232 +4,956 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Soft Collapse</title>
-
     <style>
-        /* ========================================
-           RESET E BASE
-        ======================================== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: #0d0b1a;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-
-        /* ========================================
-           CONTAINER
-        ======================================== */
-        #game-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(ellipse at 50% 0%, #1a1440 0%, #0d0b1a 70%);
-        }
-
-        /* ========================================
-           CANVAS
-        ======================================== */
-        #gameCanvas {
-            display: block;
-            border-radius: 16px;
-            box-shadow: 0 0 60px rgba(120, 80, 255, 0.12), inset 0 0 0 1px rgba(255,255,255,0.04);
-            touch-action: none;
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        /* ========================================
-           UI TOPO
-        ======================================== */
-        #ui-top {
-            position: absolute;
-            top: 14px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 18px;
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        .ui-box {
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 14px;
-            padding: 9px 16px;
-            color: #fff;
-            font-size: 14px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            border: 1px solid rgba(255, 255, 255, 0.07);
-        }
-
-        #left-ui {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        #score-box {
-            min-width: 100px;
-            text-align: center;
-        }
-
-        #record-box {
-            min-width: 100px;
-            text-align: center;
-            color: #ffd700;
-            font-size: 12px;
-            padding: 5px 12px;
-            opacity: 0.9;
-        }
-
-        #combo-box {
-            min-width: 80px;
-            text-align: center;
-            color: #ff9ff3;
-            opacity: 0;
-            transition: opacity 0.25s ease;
-        }
-
-        #combo-box.show {
-            opacity: 1;
-        }
-
-        #next-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 96px;
-        }
-
-        #next-preview {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.25);
-            transition: background 0.2s;
-        }
-
-        /* ========================================
-           GAME OVER - TELA DETALHADA
-        ======================================== */
-        #game-over {
-            position: absolute;
-            inset: 0;
-            background: rgba(6, 4, 18, 0.92);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 20;
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-        }
-
-        #game-over .go-content {
-            background: rgba(20, 16, 45, 0.85);
-            border: 1px solid rgba(255, 107, 157, 0.25);
-            border-radius: 24px;
-            padding: 36px 40px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            max-width: 340px;
-            width: 90%;
-        }
-
-        #game-over h1 {
-            color: #ff6b9d;
-            font-size: 2.6rem;
-            margin-bottom: 6px;
-            font-weight: 800;
-            letter-spacing: -1px;
-            text-shadow: 0 0 30px rgba(255, 107, 157, 0.4);
-        }
-
-        #game-over .go-subtitle {
-            color: rgba(255, 255, 255, 0.45);
-            font-size: 0.9rem;
-            margin-bottom: 28px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        #game-over .go-score-box {
-            background: rgba(0, 0, 0, 0.35);
-            border-radius: 16px;
-            padding: 16px 24px;
-            margin-bottom: 14px;
-        }
-
-        #game-over .go-score-label {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.85rem;
-            margin-bottom: 4px;
-        }
-
-        #game-over .go-score-value {
-            color: #fff;
-            font-size: 2rem;
-            font-weight: 700;
-        }
-
-        #game-over .go-record-box {
-            background: rgba(255, 215, 0, 0.08);
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            border-radius: 16px;
-            padding: 14px 24px;
-            margin-bottom: 28px;
-        }
-
-        #game-over .go-record-label {
-            color: rgba(255, 215, 0, 0.7);
-            font-size: 0.85rem;
-            margin-bottom: 4px;
-        }
-
-        #game-over .go-record-value {
-            color: #ffd700;
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        #game-over .new-record {
-            color: #ff6b9d;
-            font-size: 0.95rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        #restart-btn {
-            background: linear-gradient(135deg, #ff6b9d, #c44569);
-            color: #fff;
-            border: none;
-            padding: 16px 48px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 12px 35px rgba(255, 107, 157, 0.35);
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-
-        #restart-btn:active {
-            transform: scale(0.96);
-        }
-
-        /* ========================================
-           GUIA PRIMEIRA VEZ
-        ======================================== */
-        #guide-screen {
-            position: absolute;
-            inset: 0;
-            background: rgba(8, 6, 20, 0.94);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 30;
-            padding: 28px;
-            text-align: center;
-            backdrop-filter: blur(12px);
-        }
-
-        #guide-screen h2 {
-            color: #ff6b9d;
-            font-size: 1.7rem;
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-
-        #guide-screen p {
-            color: #d0cce8;
-            font-size: 1rem;
-            line-height: 1.65;
-            max-width: 310px;
-            margin-bottom: 11px;
-        }
-
-        #guide-btn {
-            margin-top: 22px;
-            background: linear-gradient(135deg, #5b8def, #7c4dff);
-            color: #fff;
-            border: none;
-            padding: 15px 38px;
-            font-size: 1.05rem;
-            font-weight: 700;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 10px 28px rgba(91, 141, 239, 0.3);
-        }
-
-        #guide-btn:active {
-            transform: scale(0.96);
-        }
-
-        /* ========================================
-           HINT
-        ======================================== */
-        #hint {
-            position: absolute;
-            bottom: 22px;
-            color: rgba(255, 255, 255, 0.35);
-            font-size: 13px;
-            letter-spacing: 0.4px;
-            z-index: 5;
-            pointer-events: none;
-        }
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+        html,body{width:100%;height:100%;overflow:hidden;background:#0d0b1a;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+        #game-container{position:relative;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 0%,#1a1440 0%,#0d0b1a 70%);transition:background .6s ease}
+        #game-container.phase-2{background:radial-gradient(ellipse at 50% 0%,#0f2a2a 0%,#0a1a1a 70%)}
+        #game-container.phase-3{background:radial-gradient(ellipse at 50% 0%,#1a0a1a 0%,#0d0610 70%)}
+        #gameCanvas{display:block;border-radius:16px;box-shadow:0 0 60px rgba(120,80,255,.12),inset 0 0 0 1px rgba(255,255,255,.04);touch-action:none;background:rgba(255,255,255,.02)}
+        #game-container.phase-2 #gameCanvas{box-shadow:0 0 60px rgba(45,212,191,.12),inset 0 0 0 1px rgba(255,255,255,.04)}
+        #game-container.phase-3 #gameCanvas{box-shadow:0 0 60px rgba(190,24,93,.15),inset 0 0 0 1px rgba(255,255,255,.04)}
+        #ui-top{position:absolute;top:14px;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:0 18px;z-index:10;pointer-events:none}
+        .ui-box{background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:14px;padding:9px 16px;color:#fff;font-size:14px;font-weight:600;letter-spacing:.3px;border:1px solid rgba(255,255,255,.07)}
+        #left-ui{display:flex;flex-direction:column;gap:6px;pointer-events:auto}
+        #score-box{min-width:100px;text-align:center}
+        #record-box{min-width:100px;text-align:center;color:#ffd700;font-size:12px;padding:5px 12px;opacity:.9}
+        #menu-btn{min-width:100px;text-align:center;font-size:12px;padding:6px 12px;cursor:pointer;pointer-events:auto;background:rgba(255,255,255,.08)}
+        #menu-btn:active{background:rgba(255,255,255,.15)}
+        #combo-box{min-width:80px;text-align:center;color:#ff9ff3;opacity:0;transition:opacity .25s}
+        #combo-box.show{opacity:1}
+        #next-box{display:flex;align-items:center;gap:10px;min-width:96px}
+        #next-preview{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.25);transition:background .2s}
+        #phase-label{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.45);backdrop-filter:blur(8px);border-radius:20px;padding:4px 14px;font-size:11px;color:rgba(255,255,255,.6);letter-spacing:1px;z-index:10;pointer-events:none}
+        #game-over{position:absolute;inset:0;background:rgba(6,4,18,.92);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:20;backdrop-filter:blur(14px)}
+        #game-over .go-content{background:rgba(20,16,45,.85);border:1px solid rgba(255,107,157,.25);border-radius:24px;padding:36px 40px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);max-width:340px;width:90%}
+        #game-over h1{color:#ff6b9d;font-size:2.6rem;margin-bottom:6px;font-weight:800;letter-spacing:-1px;text-shadow:0 0 30px rgba(255,107,157,.4)}
+        #game-over .go-subtitle{color:rgba(255,255,255,.45);font-size:.9rem;margin-bottom:28px;letter-spacing:1px;text-transform:uppercase}
+        #game-over .go-score-box{background:rgba(0,0,0,.35);border-radius:16px;padding:16px 24px;margin-bottom:14px}
+        #game-over .go-score-label{color:rgba(255,255,255,.5);font-size:.85rem;margin-bottom:4px}
+        #game-over .go-score-value{color:#fff;font-size:2rem;font-weight:700}
+        #game-over .go-record-box{background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.2);border-radius:16px;padding:14px 24px;margin-bottom:28px}
+        #game-over .go-record-label{color:rgba(255,215,0,.7);font-size:.85rem;margin-bottom:4px}
+        #game-over .go-record-value{color:#ffd700;font-size:1.5rem;font-weight:700}
+        #game-over .new-record{color:#ff6b9d;font-size:.95rem;font-weight:600;margin-bottom:20px;display:none}
+        #restart-btn{background:linear-gradient(135deg,#ff6b9d,#c44569);color:#fff;border:none;padding:16px 48px;font-size:1.1rem;font-weight:700;border-radius:50px;cursor:pointer;box-shadow:0 12px 35px rgba(255,107,157,.35)}
+        #restart-btn:active{transform:scale(.96)}
+        #unlock-screen{position:absolute;inset:0;background:rgba(6,4,18,.94);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:25;backdrop-filter:blur(14px);padding:24px;text-align:center}
+        #unlock-screen .unlock-box{background:rgba(20,16,45,.9);border:1px solid rgba(45,212,191,.35);border-radius:24px;padding:36px 32px;max-width:340px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+        #unlock-screen h2{color:#2DD4BF;font-size:1.6rem;margin-bottom:12px;font-weight:700}
+        #unlock-screen p{color:#d0cce8;font-size:1rem;line-height:1.5;margin-bottom:28px}
+        .unlock-btns{display:flex;flex-direction:column;gap:12px}
+        .unlock-btns button{border:none;padding:14px 24px;font-size:1rem;font-weight:700;border-radius:50px;cursor:pointer}
+        .unlock-btns button:active{transform:scale(.96)}
+        #btn-go-next{background:linear-gradient(135deg,#2DD4BF,#0D9488);color:#fff;box-shadow:0 8px 25px rgba(45,212,191,.3)}
+        #btn-stay{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15)}
+        #menu-screen{position:absolute;inset:0;background:rgba(6,4,18,.95);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:30;backdrop-filter:blur(16px);padding:24px}
+        #menu-screen .menu-box{background:rgba(20,16,45,.92);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:28px 24px;max-width:360px;width:92%;box-shadow:0 25px 70px rgba(0,0,0,.55);max-height:90vh;overflow-y:auto}
+        #menu-screen h2{color:#fff;font-size:1.6rem;text-align:center;margin-bottom:18px;font-weight:700}
+        .menu-records{background:rgba(0,0,0,.3);border-radius:16px;padding:14px;margin-bottom:18px}
+        .menu-record-row{display:flex;justify-content:space-between;padding:6px 4px;font-size:.9rem;color:#d0cce8}
+        .menu-record-row .label{opacity:.7}
+        .menu-record-row .value{font-weight:700;color:#ffd700}
+        .menu-record-row.total .value{color:#2DD4BF}
+        .menu-phases{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+        .phase-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 18px;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}
+        .phase-btn.active{border-color:rgba(255,107,157,.5);background:rgba(255,107,157,.12)}
+        .phase-btn.locked{opacity:.5;cursor:not-allowed}
+        .phase-btn .lock-text{font-size:.72rem;color:#ff6b9d;font-weight:500}
+        #menu-guide-btn{width:100%;background:rgba(91,141,239,.15);border:1px solid rgba(91,141,239,.3);border-radius:50px;padding:12px;color:#a5b4fc;font-size:.95rem;font-weight:600;cursor:pointer;margin-bottom:10px}
+        #menu-close{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:50px;padding:12px;color:#fff;font-size:.95rem;font-weight:600;cursor:pointer}
+        #mechanics-guide{position:absolute;inset:0;background:rgba(6,4,18,.96);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:40;backdrop-filter:blur(16px);padding:20px}
+        #mechanics-guide .guide-box{background:rgba(20,16,45,.95);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px 24px;max-width:360px;width:94%;max-height:85vh;overflow-y:auto}
+        #mechanics-guide h2{color:#ff6b9d;font-size:1.4rem;text-align:center;margin-bottom:18px}
+        .mech-item{background:rgba(0,0,0,.25);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+        .mech-item h3{color:#fff;font-size:.95rem;margin-bottom:4px}
+        .mech-item p{color:#b0a8c8;font-size:.85rem;line-height:1.45}
+        #guide-close{width:100%;margin-top:16px;background:linear-gradient(135deg,#5b8def,#7c4dff);border:none;border-radius:50px;padding:13px;color:#fff;font-size:1rem;font-weight:700;cursor:pointer}
+        #guide-screen{position:absolute;inset:0;background:rgba(8,6,20,.94);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:35;padding:28px;text-align:center;backdrop-filter:blur(12px)}
+        #guide-screen h2{color:#ff6b9d;font-size:1.7rem;margin-bottom:20px;font-weight:700}
+        #guide-screen p{color:#d0cce8;font-size:1rem;line-height:1.65;max-width:310px;margin-bottom:11px}
+        #guide-btn{margin-top:22px;background:linear-gradient(135deg,#5b8def,#7c4dff);color:#fff;border:none;padding:15px 38px;font-size:1.05rem;font-weight:700;border-radius:50px;cursor:pointer}
+        #hint{position:absolute;bottom:22px;color:rgba(255,255,255,.35);font-size:13px;letter-spacing:.4px;z-index:5;pointer-events:none}
     </style>
 </head>
 <body>
-
-    <div id="game-container">
-
-        <div id="ui-top">
-            <div id="left-ui">
-                <div class="ui-box" id="score-box">
-                    Score: <span id="score-value">0</span>
-                </div>
-                <div class="ui-box" id="record-box">
-                    Recorde: <span id="record-value">0</span>
-                </div>
-            </div>
-
-            <div class="ui-box" id="combo-box">
-                Combo x<span id="combo-value">1</span>
-            </div>
-
-            <div class="ui-box" id="next-box">
-                Next
-                <div id="next-preview"></div>
-            </div>
+<div id="game-container">
+    <div id="phase-label">FASE 1</div>
+    <div id="ui-top">
+        <div id="left-ui">
+            <div class="ui-box" id="score-box">Score: <span id="score-value">0</span></div>
+            <div class="ui-box" id="record-box">Recorde: <span id="record-value">0</span></div>
+            <div class="ui-box" id="menu-btn">Menu</div>
         </div>
+        <div class="ui-box" id="combo-box">Combo x<span id="combo-value">1</span></div>
+        <div class="ui-box" id="next-box">Next<div id="next-preview"></div></div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div id="hint">Toque ou clique para soltar</div>
 
-        <canvas id="gameCanvas"></canvas>
-
-        <div id="hint">Toque ou clique para soltar</div>
-
-        <!-- GAME OVER DETALHADO -->
-        <div id="game-over">
-            <div class="go-content">
-                <h1>Game Over</h1>
-                <div class="go-subtitle">Fim de jogo</div>
-
-                <div class="go-score-box">
-                    <div class="go-score-label">Sua pontuação</div>
-                    <div class="go-score-value" id="final-score">0</div>
-                </div>
-
-                <div class="go-record-box">
-                    <div class="go-record-label">Melhor recorde</div>
-                    <div class="go-record-value" id="final-record">0</div>
-                </div>
-
-                <div class="new-record" id="new-record-msg">Novo Recorde!</div>
-
-                <button id="restart-btn">Jogar Novamente</button>
-            </div>
+    <div id="game-over">
+        <div class="go-content">
+            <h1>Game Over</h1>
+            <div class="go-subtitle">Fim de jogo</div>
+            <div class="go-score-box"><div class="go-score-label">Sua pontuação</div><div class="go-score-value" id="final-score">0</div></div>
+            <div class="go-record-box"><div class="go-record-label">Melhor recorde</div><div class="go-record-value" id="final-record">0</div></div>
+            <div class="new-record" id="new-record-msg">Novo Recorde!</div>
+            <button id="restart-btn">Jogar Novamente</button>
         </div>
-
-        <div id="guide-screen">
-            <h2>Como Jogar</h2>
-            <p>Arraste para mirar e solte para dropar a bola.</p>
-            <p>Bolas iguais se fundem e viram uma maior.</p>
-            <p>Você perde se as bolas ficarem acima da linha vermelha.</p>
-            <p>Faça combos seguidos para multiplicar os pontos!</p>
-            <button id="guide-btn">Entendi, vamos jogar</button>
-        </div>
-
     </div>
 
-    <script>
-        // ================================================================
-        // CONFIGURAÇÕES
-        // ================================================================
-        const CONFIG = {
-            gravity: 0.22,
-            friction: 0.991,
-            restitution: 0.35,
-            dropY: 55,
-            dangerLine: 105,
-            maxBalls: 55,
-            specialChance: 0.07
-        };
+    <div id="unlock-screen">
+        <div class="unlock-box">
+            <h2 id="unlock-title">Fase Desbloqueada!</h2>
+            <p id="unlock-text">Parabéns!</p>
+            <div class="unlock-btns">
+                <button id="btn-go-next">Ir para a próxima fase</button>
+                <button id="btn-stay">Continuar nesta fase</button>
+            </div>
+        </div>
+    </div>
 
-        // ================================================================
-        // NÍVEIS DAS BOLAS (13 níveis - 0 a 12)
-        // ================================================================
+    <div id="menu-screen">
+        <div class="menu-box">
+            <h2>Menu</h2>
+            <div class="menu-records">
+                <div class="menu-record-row"><span class="label">Recorde Fase 1</span><span class="value" id="menu-rec-1">0</span></div>
+                <div class="menu-record-row"><span class="label">Recorde Fase 2</span><span class="value" id="menu-rec-2">0</span></div>
+                <div class="menu-record-row"><span class="label">Recorde Fase 3</span><span class="value" id="menu-rec-3">0</span></div>
+                <div class="menu-record-row total"><span class="label">Recorde Total</span><span class="value" id="menu-rec-total">0</span></div>
+            </div>
+            <div class="menu-phases">
+                <button class="phase-btn active" id="btn-phase1"><span>Fase 1</span></button>
+                <button class="phase-btn locked" id="btn-phase2"><span>Fase 2</span><span class="lock-text">Bloqueada</span></button>
+                <button class="phase-btn locked" id="btn-phase3"><span>Fase 3</span><span class="lock-text">Bloqueada</span></button>
+            </div>
+            <button id="menu-guide-btn">Guia de Mecânicas</button>
+            <button id="menu-close">Fechar</button>
+        </div>
+    </div>
 
-        const LEVELS = [
-            { radius: 15, color: "#FF6B6B", score: 1     },  // 0  vermelho
-            { radius: 19, color: "#FF9F43", score: 2     },  // 1  laranja
-            { radius: 23, color: "#FECA57", score: 4     },  // 2  amarelo
-            { radius: 28, color: "#1DD1A1", score: 8     },  // 3  verde
-            { radius: 33, color: "#54A0FF", score: 16    },  // 4  azul
-            { radius: 39, color: "#5F27CD", score: 32    },  // 5  roxo
-            { radius: 45, color: "#FF9FF3", score: 64    },  // 6  rosa
-            { radius: 52, color: "#00D2D3", score: 128   },  // 7  ciano
-            { radius: 60, color: "#FF6B9D", score: 256   },  // 8  pink
-            { radius: 70, color: "#E2E8F0", score: 512   },  // 9  prata clara
-            { radius: 82, color: "#FFD700", score: 1024  },  // 10 ouro
-            { radius: 94, color: "#C084FC", score: 2048  },  // 11 lavanda / roxo claro (NOVO)
-            { radius: 108,color: "#2DD4BF", score: 4096  }   // 12 turquesa (NOVO)
-        ];
+    <div id="mechanics-guide">
+        <div class="guide-box">
+            <h2>Guia de Mecânicas</h2>
+            <div class="mech-item"><h3>Bomba</h3><p>Explode e destrói as bolas próximas quando encosta em qualquer uma.</p></div>
+            <div class="mech-item"><h3>Bola Arco-íris</h3><p>Se funde com qualquer bola, criando uma do próximo nível.</p></div>
+            <div class="mech-item"><h3>Bola Espelho (Fase 3)</h3><p>Ao tocar em outra bola, copia o nível dela e se transforma na mesma.</p></div>
+            <div class="mech-item"><h3>Crescimento em Cadeia (Fase 3)</h3><p>Ao fazer um merge de nível 8 ou superior, 50% de chance de todas as bolas do mesmo nível na tela subirem +1 nível.</p></div>
+            <div class="mech-item"><h3>Pontuação por Fase</h3><p>Fase 1 = x1 | Fase 2 = x2 | Fase 3 = x3</p></div>
+            <button id="guide-close">Entendi</button>
+        </div>
+    </div>
 
-        // ================================================================
-        // SONS
-        // ================================================================
+    <div id="guide-screen">
+        <h2>Como Jogar</h2>
+        <p>Arraste para mirar e solte para dropar a bola.</p>
+        <p>Bolas iguais se fundem e viram uma maior.</p>
+        <p>Você perde se as bolas ficarem acima da linha vermelha.</p>
+        <p>Faça combos seguidos para multiplicar os pontos!</p>
+        <button id="guide-btn">Entendi, vamos jogar</button>
+    </div>
+</div>
 
-        const sfxPop = new Audio("pop.mp3");
-        const sfxBomb = new Audio("bomb.wav");
+<script>
+// ================================================================
+// CONFIGURAÇÕES
+// ================================================================
+const CONFIG = {
+    gravity: 0.22,
+    friction: 0.991,
+    restitution: 0.35,
+    dropY: 55,
+    dangerLine: 105,
+    maxBalls: 55,
+    specialChance: 0.07,
+    phase2Unlock: 70000,
+    phase3Unlock: 110000
+};
 
-        sfxPop.volume = 0.55;
-        sfxBomb.volume = 0.6;
+// ================================================================
+// CORES POR FASE
+// ================================================================
+const LEVELS_P1 = [
+    {radius:15,color:"#FF6B6B",score:1},
+    {radius:19,color:"#FF9F43",score:2},
+    {radius:23,color:"#FECA57",score:4},
+    {radius:28,color:"#1DD1A1",score:8},
+    {radius:33,color:"#54A0FF",score:16},
+    {radius:39,color:"#5F27CD",score:32},
+    {radius:45,color:"#FF9FF3",score:64},
+    {radius:52,color:"#00D2D3",score:128},
+    {radius:60,color:"#FF6B9D",score:256},
+    {radius:70,color:"#E2E8F0",score:512},
+    {radius:82,color:"#FFD700",score:1024},
+    {radius:94,color:"#C084FC",score:2048},
+    {radius:108,color:"#2DD4BF",score:4096}
+];
 
-        let audioUnlocked = false;
+const LEVELS_P2 = [
+    {radius:15,color:"#7C3AED",score:1},
+    {radius:19,color:"#06B6D4",score:2},
+    {radius:23,color:"#EC4899",score:4},
+    {radius:28,color:"#F97316",score:8},
+    {radius:33,color:"#84CC16",score:16},
+    {radius:39,color:"#F43F5E",score:32},
+    {radius:45,color:"#FB923C",score:64},
+    {radius:52,color:"#4ADE80",score:128},
+    {radius:60,color:"#14B8A6",score:256},
+    {radius:70,color:"#F59E0B",score:512},
+    {radius:82,color:"#6366F1",score:1024},
+    {radius:94,color:"#EF4444",score:2048},
+    {radius:108,color:"#D946EF",score:4096},
+    {radius:120,color:"#94A3B8",score:8192}
+];
 
-        function unlockAudio() {
-            if (audioUnlocked) return;
-            audioUnlocked = true;
+const LEVELS_P3 = [
+    {radius:15,color:"#4A044E",score:1},
+    {radius:19,color:"#881337",score:2},
+    {radius:23,color:"#3B0764",score:4},
+    {radius:28,color:"#9F1239",score:8},
+    {radius:33,color:"#1C1917",score:16},
+    {radius:39,color:"#0C4A6E",score:32},
+    {radius:45,color:"#713F12",score:64},
+    {radius:52,color:"#365314",score:128},
+    {radius:60,color:"#4C0519",score:256},
+    {radius:70,color:"#1E1B4B",score:512},
+    {radius:82,color:"#831843",score:1024},
+    {radius:94,color:"#3F3F46",score:2048},
+    {radius:108,color:"#500724",score:4096},
+    {radius:120,color:"#1A2E05",score:8192},
+    {radius:132,color:"#2E1065",score:16384}
+];
 
-            sfxPop.play().then(function () {
-                sfxPop.pause();
-                sfxPop.currentTime = 0;
-            }).catch(function () {});
+let LEVELS = LEVELS_P1;
 
-            sfxBomb.play().then(function () {
-                sfxBomb.pause();
-                sfxBomb.currentTime = 0;
-            }).catch(function () {});
+// ================================================================
+// SONS
+// ================================================================
+const sfxPop = new Audio("pop.mp3");
+const sfxBomb = new Audio("bomb.wav");
+sfxPop.volume = 0.55;
+sfxBomb.volume = 0.6;
+let audioUnlocked = false;
+
+function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    sfxPop.play().then(function(){sfxPop.pause();sfxPop.currentTime=0}).catch(function(){});
+    sfxBomb.play().then(function(){sfxBomb.pause();sfxBomb.currentTime=0}).catch(function(){});
+}
+
+function playPop() {
+    sfxPop.currentTime = 0;
+    sfxPop.play().catch(function(){});
+}
+
+function playBomb() {
+    sfxBomb.currentTime = 0;
+    sfxBomb.play().catch(function(){});
+}
+
+// ================================================================
+// CANVAS
+// ================================================================
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d", {alpha: false});
+let W = 0, H = 0;
+
+// ================================================================
+// ESTADO
+// ================================================================
+let balls = [];
+let particles = [];
+let score = 0;
+let currentPhase = 1;
+
+let highScore1 = parseInt(localStorage.getItem("sc_high_1") || "0");
+let highScore2 = parseInt(localStorage.getItem("sc_high_2") || "0");
+let highScore3 = parseInt(localStorage.getItem("sc_high_3") || "0");
+
+let phase2Unlocked = localStorage.getItem("sc_unlocked_2") === "1" || localStorage.getItem("sc_dev") === "1";
+let phase3Unlocked = localStorage.getItem("sc_unlocked_3") === "1" || localStorage.getItem("sc_dev") === "1";
+
+let unlockShown2 = false;
+let unlockShown3 = false;
+let pendingUnlockPhase = 0;
+
+let heldLevel = 0, heldSpecial = null;
+let nextLevel = 0, nextSpecial = null;
+let current = null, canDrop = true, gameOver = false;
+let shake = 0, lastX = 0, highestLevelReached = 0, dangerTimer = 0;
+let combo = 0, comboTimer = 0, multiplier = 1;
+
+// ================================================================
+// UI
+// ================================================================
+const elScore = document.getElementById("score-value");
+const elRecord = document.getElementById("record-value");
+const elCombo = document.getElementById("combo-box");
+const elComboVal = document.getElementById("combo-value");
+const elNext = document.getElementById("next-preview");
+const elGameOver = document.getElementById("game-over");
+const elFinal = document.getElementById("final-score");
+const elFinalRecord = document.getElementById("final-record");
+const elNewRecord = document.getElementById("new-record-msg");
+const elRestart = document.getElementById("restart-btn");
+const elHint = document.getElementById("hint");
+const elGuide = document.getElementById("guide-screen");
+const elGuideBtn = document.getElementById("guide-btn");
+const elPhaseLabel = document.getElementById("phase-label");
+const elMenuBtn = document.getElementById("menu-btn");
+const elMenuScreen = document.getElementById("menu-screen");
+const elMenuClose = document.getElementById("menu-close");
+const elUnlockScreen = document.getElementById("unlock-screen");
+const elUnlockTitle = document.getElementById("unlock-title");
+const elUnlockText = document.getElementById("unlock-text");
+const elBtnGoNext = document.getElementById("btn-go-next");
+const elBtnStay = document.getElementById("btn-stay");
+const elBtnPhase1 = document.getElementById("btn-phase1");
+const elBtnPhase2 = document.getElementById("btn-phase2");
+const elBtnPhase3 = document.getElementById("btn-phase3");
+const elMenuRec1 = document.getElementById("menu-rec-1");
+const elMenuRec2 = document.getElementById("menu-rec-2");
+const elMenuRec3 = document.getElementById("menu-rec-3");
+const elMenuRecTotal = document.getElementById("menu-rec-total");
+const elContainer = document.getElementById("game-container");
+const elMenuGuideBtn = document.getElementById("menu-guide-btn");
+const elMechanicsGuide = document.getElementById("mechanics-guide");
+const elGuideClose = document.getElementById("guide-close");
+
+// ================================================================
+// MULTIPLICADOR
+// ================================================================
+function getScoreMultiplier() {
+    if (currentPhase === 2) return 2;
+    if (currentPhase === 3) return 3;
+    return 1;
+}
+
+// ================================================================
+// CLASSE BOLA
+// ================================================================
+class Ball {
+    constructor(x, y, level, special) {
+        this.x = x;
+        this.y = y;
+        this.level = level;
+        this.special = special || null;
+        this.vx = 0;
+        this.vy = 0;
+        this.alive = true;
+        this.passedBelowDangerLine = false;
+        this.id = Math.random().toString(36).slice(2);
+
+        if (this.special === "rainbow") {
+            this.r = 25;
+            this.color = "#fff";
+        } else if (this.special === "bomb") {
+            this.r = 23;
+            this.color = "#222";
+        } else if (this.special === "mirror") {
+            this.r = 24;
+            this.color = "#E2E8F0";
+        } else {
+            this.r = LEVELS[level].radius;
+            this.color = LEVELS[level].color;
         }
+    }
 
-        function playPop() {
-            sfxPop.currentTime = 0;
-            sfxPop.play().catch(function () {});
+    update() {
+        this.vy += CONFIG.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vx *= CONFIG.friction;
+        this.vy *= CONFIG.friction;
+
+        if (this.x - this.r < 0) { this.x = this.r; this.vx *= -CONFIG.restitution; }
+        if (this.x + this.r > W) { this.x = W - this.r; this.vx *= -CONFIG.restitution; }
+        if (this.y + this.r > H) { this.y = H - this.r; this.vy *= -CONFIG.restitution; this.vx *= 0.9; }
+    }
+
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x + 2, this.y + 3, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+
+        if (this.special === "rainbow") {
+            const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
+            g.addColorStop(0,"#FF6B6B"); g.addColorStop(0.2,"#FECA57"); g.addColorStop(0.4,"#1DD1A1");
+            g.addColorStop(0.6,"#54A0FF"); g.addColorStop(0.8,"#5F27CD"); g.addColorStop(1,"#FF9FF3");
+            ctx.fillStyle = g;
+        } else if (this.special === "bomb") {
+            ctx.fillStyle = "#1a1a1a";
+        } else if (this.special === "mirror") {
+            const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
+            g.addColorStop(0,"#F8FAFC"); g.addColorStop(0.7,"#CBD5E1"); g.addColorStop(1,"#94A3B8");
+            ctx.fillStyle = g;
+        } else {
+            const g = ctx.createRadialGradient(this.x - this.r*0.3, this.y - this.r*0.3, this.r*0.1, this.x, this.y, this.r);
+            g.addColorStop(0, lighten(this.color, 40));
+            g.addColorStop(0.65, this.color);
+            g.addColorStop(1, darken(this.color, 30));
+            ctx.fillStyle = g;
         }
+        ctx.fill();
 
-        function playBomb() {
-            sfxBomb.currentTime = 0;
-            sfxBomb.play().catch(function () {});
-        }
-
-        // ================================================================
-        // CANVAS
-        // ================================================================
-
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d", { alpha: false });
-
-        let W = 0;
-        let H = 0;
-
-        // ================================================================
-        // ESTADO DO JOGO
-        // ================================================================
-
-        let balls = [];
-        let particles = [];
-        let score = 0;
-        let highScore = parseInt(localStorage.getItem("sc_high") || "0");
-
-        // Bola que o jogador está segurando agora
-        let heldLevel = 0;
-        let heldSpecial = null;
-
-        // Bola que vai vir DEPOIS (mostrada no preview)
-        let nextLevel = 0;
-        let nextSpecial = null;
-
-        let current = null;
-        let canDrop = true;
-        let gameOver = false;
-        let shake = 0;
-        let lastX = 0;
-        let highestLevelReached = 0;
-        let dangerTimer = 0;
-
-        // ================================================================
-        // COMBO
-        // ================================================================
-
-        let combo = 0;
-        let comboTimer = 0;
-        let multiplier = 1;
-
-        // ================================================================
-        // UI ELEMENTS
-        // ================================================================
-
-        const elScore = document.getElementById("score-value");
-        const elRecord = document.getElementById("record-value");
-        const elCombo = document.getElementById("combo-box");
-        const elComboVal = document.getElementById("combo-value");
-        const elNext = document.getElementById("next-preview");
-        const elGameOver = document.getElementById("game-over");
-        const elFinal = document.getElementById("final-score");
-        const elFinalRecord = document.getElementById("final-record");
-        const elNewRecord = document.getElementById("new-record-msg");
-        const elRestart = document.getElementById("restart-btn");
-        const elHint = document.getElementById("hint");
-        const elGuide = document.getElementById("guide-screen");
-        const elGuideBtn = document.getElementById("guide-btn");
-
-        // ================================================================
-        // CLASSE BOLA
-        // ================================================================
-
-        class Ball {
-            constructor(x, y, level, special) {
-                this.x = x;
-                this.y = y;
-                this.level = level;
-                this.special = special || null;
-                this.vx = 0;
-                this.vy = 0;
-                this.alive = true;
-                this.passedBelowDangerLine = false;
-                this.id = Math.random().toString(36).slice(2);
-
-                if (this.special === "rainbow") {
-                    this.r = 25;
-                    this.color = "#fff";
-                } else if (this.special === "bomb") {
-                    this.r = 23;
-                    this.color = "#222";
-                } else {
-                    this.r = LEVELS[level].radius;
-                    this.color = LEVELS[level].color;
-                }
-            }
-
-            update() {
-                this.vy += CONFIG.gravity;
-                this.x += this.vx;
-                this.y += this.vy;
-                this.vx *= CONFIG.friction;
-                this.vy *= CONFIG.friction;
-
-                if (this.x - this.r < 0) {
-                    this.x = this.r;
-                    this.vx *= -CONFIG.restitution;
-                }
-                if (this.x + this.r > W) {
-                    this.x = W - this.r;
-                    this.vx *= -CONFIG.restitution;
-                }
-
-                if (this.y + this.r > H) {
-                    this.y = H - this.r;
-                    this.vy *= -CONFIG.restitution;
-                    this.vx *= 0.9;
-                }
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x + 2, this.y + 3, this.r, 0, Math.PI * 2);
-                ctx.fillStyle = "rgba(0,0,0,0.2)";
-                ctx.fill();
-
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-
-                if (this.special === "rainbow") {
-                    const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
-                    g.addColorStop(0.0, "#FF6B6B");
-                    g.addColorStop(0.2, "#FECA57");
-                    g.addColorStop(0.4, "#1DD1A1");
-                    g.addColorStop(0.6, "#54A0FF");
-                    g.addColorStop(0.8, "#5F27CD");
-                    g.addColorStop(1.0, "#FF9FF3");
-                    ctx.fillStyle = g;
-                } else if (this.special === "bomb") {
-                    ctx.fillStyle = "#1a1a1a";
-                } else {
-                    const g = ctx.createRadialGradient(
-                        this.x - this.r * 0.3,
-                        this.y - this.r * 0.3,
-                        this.r * 0.1,
-                        this.x,
-                        this.y,
-                        this.r
-                    );
-                    g.addColorStop(0, lighten(this.color, 40));
-                    g.addColorStop(0.65, this.color);
-                    g.addColorStop(1, darken(this.color, 30));
-                    ctx.fillStyle = g;
-                }
-
-                ctx.fill();
-
-                if (this.special === "bomb") {
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.r * 0.32, 0, Math.PI * 2);
-                    ctx.fillStyle = "#ff2a2a";
-                    ctx.fill();
-                }
-
-                if (!this.special) {
-                    ctx.beginPath();
-                    ctx.arc(
-                        this.x - this.r * 0.28,
-                        this.y - this.r * 0.28,
-                        this.r * 0.22,
-                        0,
-                        Math.PI * 2
-                    );
-                    ctx.fillStyle = "rgba(255,255,255,0.32)";
-                    ctx.fill();
-                }
-            }
-        }
-
-
-        // ================================================================
-        // PARTÍCULA
-        // ================================================================
-        class Particle {
-            constructor(x, y, color) {
-                this.x = x;
-                this.y = y;
-                this.color = color;
-                const ang = Math.random() * Math.PI * 2;
-                const spd = 1.2 + Math.random() * 2.8;
-                this.vx = Math.cos(ang) * spd;
-                this.vy = Math.sin(ang) * spd - 1.2;
-                this.life = 1;
-                this.decay = 0.03 + Math.random() * 0.02;
-                this.size = 2 + Math.random() * 2.5;
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                this.vy += 0.07;
-                this.life -= this.decay;
-            }
-
-            draw() {
-                if (this.life <= 0) return;
-                ctx.globalAlpha = this.life;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-                ctx.globalAlpha = 1;
-            }
-        }
-
-
-        // ================================================================
-        // FUNÇÕES DE COR
-        // ================================================================
-        function lighten(hex, amt) {
-            const n = parseInt(hex.slice(1), 16);
-            const r = Math.min(255, (n >> 16) + amt);
-            const g = Math.min(255, ((n >> 8) & 255) + amt);
-            const b = Math.min(255, (n & 255) + amt);
-            return "rgb(" + r + "," + g + "," + b + ")";
-        }
-
-        function darken(hex, amt) {
-            const n = parseInt(hex.slice(1), 16);
-            const r = Math.max(0, (n >> 16) - amt);
-            const g = Math.max(0, ((n >> 8) & 255) - amt);
-            const b = Math.max(0, (n & 255) - amt);
-            return "rgb(" + r + "," + g + "," + b + ")";
-        }
-
-
-        // ================================================================
-        // RESIZE
-        // ================================================================
-        function resize() {
-            const maxW = Math.min(window.innerWidth - 16, 400);
-            const maxH = window.innerHeight - 90;
-
-            W = maxW;
-            H = Math.min(maxH, 660);
-
-            canvas.width = W;
-            canvas.height = H;
-            canvas.style.width = W + "px";
-            canvas.style.height = H + "px";
-
-            lastX = W / 2;
-        }
-
-
-        // ================================================================
-        // GERA UMA BOLA ALEATÓRIA (nível + especial)
-        // ================================================================
-        function generateBallData() {
-            let special = null;
-            if (Math.random() < CONFIG.specialChance) {
-                special = Math.random() < 0.55 ? "rainbow" : "bomb";
-            }
-
-            let maxLevel = 3;
-            if (score > 200)  maxLevel = 4;
-            if (score > 500)  maxLevel = 5;
-            if (score > 1000) maxLevel = 5;
-            if (score > 2000) maxLevel = 6;
-            if (score > 4000) maxLevel = 6;
-            if (score > 7000) maxLevel = 7;
-
-            if (highestLevelReached >= 5) maxLevel = Math.max(maxLevel, 5);
-            if (highestLevelReached >= 7) maxLevel = Math.max(maxLevel, 6);
-            if (highestLevelReached >= 9) maxLevel = Math.max(maxLevel, 7);
-
-            let level;
-            const roll = Math.random();
-
-            if (score > 3000 && roll < 0.35) {
-                level = Math.floor(Math.random() * 3) + Math.max(3, maxLevel - 2);
-            } else if (score > 1500 && roll < 0.25) {
-                level = Math.floor(Math.random() * 3) + Math.max(2, maxLevel - 2);
-            } else {
-                level = Math.floor(Math.random() * (maxLevel + 1));
-            }
-
-            level = Math.min(level, maxLevel);
-            return { level: level, special: special };
-        }
-
-
-        // ================================================================
-        // ATUALIZA O PREVIEW (mostra a bola NEXT, não a que está na mão)
-        // ================================================================
-        function updatePreview() {
-            if (nextSpecial === "rainbow") {
-                elNext.style.background = "linear-gradient(135deg,#FF6B6B,#FECA57,#1DD1A1,#54A0FF,#5F27CD)";
-            } else if (nextSpecial === "bomb") {
-                elNext.style.background = "#222";
-            } else {
-                elNext.style.background = LEVELS[nextLevel].color;
-            }
-
-            const s = nextSpecial ? 22 : LEVELS[nextLevel].radius * 0.65;
-            elNext.style.width = s + "px";
-            elNext.style.height = s + "px";
-        }
-
-
-        // ================================================================
-        // PREPARAR DROP (usa a bola HELD)
-        // ================================================================
-
-        function prepare(x) {
-            if (!canDrop || gameOver) return;
-
-            lastX = x;
-
-            const r = heldSpecial ? 25 : LEVELS[heldLevel].radius;
-            const px = Math.max(r + 2, Math.min(W - r - 2, x));
-
-            current = new Ball(px, CONFIG.dropY, heldLevel, heldSpecial);
-        }
-
-        // ================================================================
-        // SOLTAR
-        // ================================================================
-
-        function drop() {
-            if (!current || !canDrop || gameOver) return;
-
-            unlockAudio();
-            canDrop = false;
-            balls.push(current);
-            current = null;
-
-            // A bola que estava no preview vira a que o jogador segura agora
-            heldLevel = nextLevel;
-            heldSpecial = nextSpecial;
-
-            // Gera a próxima de verdade (a que vai aparecer no preview)
-            const data = generateBallData();
-            nextLevel = data.level;
-            nextSpecial = data.special;
-            updatePreview();
-
-            // Coloca a nova bola held na mão
-            prepare(lastX);
-
-            setTimeout(function () {
-                canDrop = true;
-            }, 280);
-        }
-
-
-        // ================================================================
-        // FÍSICA + MERGE
-        // ================================================================
-
-        function physics() {
-            if (balls.length > CONFIG.maxBalls) {
-                balls.length = CONFIG.maxBalls;
-            }
-
-            for (let i = 0; i < balls.length; i++) {
-                balls[i].update();
-            }
-
-            let mergedThisFrame = false;
-
-            for (let i = 0; i < balls.length; i++) {
-                const a = balls[i];
-                if (!a.alive) continue;
-
-                for (let j = i + 1; j < balls.length; j++) {
-                    const b = balls[j];
-                    if (!b.alive) continue;
-
-                    const dx = b.x - a.x;
-                    const dy = b.y - a.y;
-                    const distSq = dx * dx + dy * dy;
-                    const minDist = a.r + b.r;
-
-                    if (distSq >= minDist * minDist || distSq < 0.00001) continue;
-
-                    const dist = Math.sqrt(distSq);
-                    const nx = dx / dist;
-                    const ny = dy / dist;
-                    const overlap = minDist - dist;
-
-                    const total = a.r + b.r;
-                    a.x -= nx * overlap * (b.r / total);
-                    a.y -= ny * overlap * (b.r / total);
-                    b.x += nx * overlap * (a.r / total);
-                    b.y += ny * overlap * (a.r / total);
-
-                    const dvx = a.vx - b.vx;
-                    const dvy = a.vy - b.vy;
-                    const imp = (dvx * nx + dvy * ny) * CONFIG.restitution;
-                    a.vx -= imp * nx;
-                    a.vy -= imp * ny;
-                    b.vx += imp * nx;
-                    b.vy += imp * ny;
-
-                    if (mergedThisFrame) continue;
-
-                    let doMerge = false;
-                    let type = null;
-
-                    if (a.special === "bomb" || b.special === "bomb") {
-                        doMerge = true;
-                        type = "bomb";
-                    } else if (a.special === "rainbow" || b.special === "rainbow") {
-                        doMerge = true;
-                        type = "rainbow";
-                    } else if (a.level === b.level && a.level < LEVELS.length - 1) {
-                        doMerge = true;
-                        type = "normal";
-                    }
-
-                    if (doMerge) {
-                        mergedThisFrame = true;
-
-                        if (type === "bomb") {
-                            doBomb(a.special === "bomb" ? a : b);
-                        } else if (type === "rainbow") {
-                            doRainbow(a, b);
-                        } else {
-                            doNormal(a, b);
-                        }
-                    }
-                }
-            }
-
-            balls = balls.filter(function (b) {
-                return b.alive;
-            });
-        }
-
-
-        // ================================================================
-        // MERGE NORMAL
-        // ================================================================
-
-        function doNormal(a, b) {
-            a.alive = false;
-            b.alive = false;
-
-            const lvl = a.level + 1;
-            const nx = (a.x + b.x) / 2;
-            const ny = (a.y + b.y) / 2;
-
-            if (lvl > highestLevelReached) {
-                highestLevelReached = lvl;
-            }
-
-            const neu = new Ball(nx, ny, lvl, null);
-            neu.vx = (a.vx + b.vx) * 0.2;
-            neu.vy = (a.vy + b.vy) * 0.2 - 1.0;
-            balls.push(neu);
-
-            addScore(LEVELS[lvl].score);
-            spawn(nx, ny, LEVELS[lvl].color, 6);
-            shake = Math.max(shake, 3);
-            playPop();
-        }
-
-        // ================================================================
-        // MERGE RAINBOW
-        // ================================================================
-
-        function doRainbow(a, b) {
-            a.alive = false;
-            b.alive = false;
-
-            const normal = a.special === "rainbow" ? b : a;
-            const lvl = Math.min(normal.level + 1, LEVELS.length - 1);
-            const nx = (a.x + b.x) / 2;
-            const ny = (a.y + b.y) / 2;
-
-            if (lvl > highestLevelReached) {
-                highestLevelReached = lvl;
-            }
-
-            const neu = new Ball(nx, ny, lvl, null);
-            neu.vx = (a.vx + b.vx) * 0.2;
-            neu.vy = (a.vy + b.vy) * 0.2 - 1.0;
-            balls.push(neu);
-
-            addScore(LEVELS[lvl].score * 2);
-            spawn(nx, ny, "#ffffff", 9);
-            shake = Math.max(shake, 5);
-            playPop();
-        }
-
-        // ================================================================
-        // BOMBA
-        //================================================================
-
-        function doBomb(bomb) {
-            bomb.alive = false;
-            const radius = 80;
-
-            for (let i = 0; i < balls.length; i++) {
-                const o = balls[i];
-                if (!o.alive || o === bomb) continue;
-
-                const dx = o.x - bomb.x;
-                const dy = o.y - bomb.y;
-                if (dx * dx + dy * dy < radius * radius) {
-                    o.alive = false;
-                    spawn(o.x, o.y, o.color, 4);
-                }
-            }
-
-            spawn(bomb.x, bomb.y, "#ff3333", 11);
-            shake = Math.max(shake, 7);
-            addScore(40);
-            playBomb();
-        }
-
-        // ================================================================
-        // SCORE + COMBO
-        // ================================================================
-
-        function addScore(base) {
-            combo += 1;
-            comboTimer = 75;
-            multiplier = Math.min(1 + Math.floor(combo / 2), 7);
-
-            score += base * multiplier;
-            elScore.textContent = score;
-            elComboVal.textContent = multiplier;
-            elCombo.classList.add("show");
-        }
-
-        function updateCombo() {
-            if (comboTimer > 0) {
-                comboTimer -= 1;
-                if (comboTimer <= 0) {
-                    combo = 0;
-                    multiplier = 1;
-                    elCombo.classList.remove("show");
-                }
-            }
-        }
-
-        // ================================================================
-        // PARTÍCULAS
-        // ================================================================
-
-        function spawn(x, y, color, n) {
-            if (particles.length > 35) return;
-            for (let i = 0; i < n; i++) {
-                particles.push(new Particle(x, y, color));
-            }
-        }
-
-        // ================================================================
-        // GAME OVER (CORRIGIDO)
-        // ================================================================  
-        
-        function checkLose() {
-            let danger = false;
-
-            for (let i = 0; i < balls.length; i++) {
-                const b = balls[i];
-
-                if (!b.alive) continue;
-
-                // Primeiro, a bola precisa passar completamente para baixo da linha.
-                if (b.y - b.r >= CONFIG.dangerLine) {
-                    b.passedBelowDangerLine = true;
-                }
-
-                // Depois, se voltar para cima e ultrapassar a linha, há perigo.
-                if (
-                    b.passedBelowDangerLine &&
-                    b.y - b.r < CONFIG.dangerLine
-                ) {
-                    danger = true;
-                    break;
-                }
-            }
-
-            // Mantém uma pequena tolerância para evitar Game Over instantâneo.
-            if (danger) {
-                dangerTimer++;
-
-                if (dangerTimer >= 48) {
-                    endGame();
-                    return;
-                }
-            } else {
-                dangerTimer = 0;
-            }
-        }
-
-
-        function endGame() {
-            if (gameOver) return;
-            gameOver = true;
-
-            let isNew = false;
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem("sc_high", highScore.toString());
-                isNew = true;
-            }
-
-            elFinal.textContent = score;
-            elFinalRecord.textContent = highScore;
-            elRecord.textContent = highScore;
-            elNewRecord.style.display = isNew ? "block" : "none";
-            elGameOver.style.display = "flex";
-            elHint.style.display = "none";
-        }
-
-        function restart() {
-            balls = [];
-            particles = [];
-            score = 0;
-            gameOver = false;
-            canDrop = true;
-            current = null;
-            combo = 0;
-            multiplier = 1;
-            comboTimer = 0;
-            shake = 0;
-            highestLevelReached = 0;
-            dangerTimer = 0;
-
-            elScore.textContent = "0";
-            elCombo.classList.remove("show");
-            elGameOver.style.display = "none";
-            elHint.style.display = "block";
-
-            // Gera a bola da mão e a do preview
-            const held = generateBallData();
-            heldLevel = held.level;
-            heldSpecial = held.special;
-
-            const nxt = generateBallData();
-            nextLevel = nxt.level;
-            nextSpecial = nxt.special;
-            updatePreview();
-
-            prepare(lastX);
-        }
-
-
-        // ================================================================
-        // DESENHO
-        // ================================================================
-        function drawDanger() {
-            let near = false;
-            for (let i = 0; i < balls.length; i++) {
-                if (balls[i].y - balls[i].r < CONFIG.dangerLine + 45) {
-                    near = true;
-                    break;
-                }
-            }
-
+        if (this.special === "bomb") {
             ctx.beginPath();
-            ctx.setLineDash([5, 5]);
-            ctx.moveTo(0, CONFIG.dangerLine);
-            ctx.lineTo(W, CONFIG.dangerLine);
-
-            if (near) {
-                const p = 0.4 + Math.sin(Date.now() / 140) * 0.25;
-                ctx.strokeStyle = "rgba(255,55,55," + p + ")";
-                ctx.lineWidth = 2.5;
-            } else {
-                ctx.strokeStyle = "rgba(255,70,70,0.28)";
-                ctx.lineWidth = 1.8;
-            }
+            ctx.arc(this.x, this.y, this.r * 0.32, 0, Math.PI * 2);
+            ctx.fillStyle = "#ff2a2a";
+            ctx.fill();
+        }
+        if (this.special === "mirror") {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.r * 0.4, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(255,255,255,0.5)";
+            ctx.lineWidth = 2;
             ctx.stroke();
-            ctx.setLineDash([]);
         }
-
-
-        // ================================================================
-        // LOOP
-        // ================================================================
-        function loop() {
-            ctx.save();
-            if (shake > 0.4) {
-                ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
-                shake *= 0.88;
-            } else {
-                shake = 0;
-            }
-
-            ctx.fillStyle = "#0f0d1f";
-            ctx.fillRect(0, 0, W, H);
-
-            drawDanger();
-
-            if (!gameOver) {
-                physics();
-                checkLose();
-                updateCombo();
-            }
-
-            for (let i = 0; i < balls.length; i++) {
-                balls[i].draw();
-            }
-
-            if (current) {
-                current.draw();
-            }
-
-            for (let i = particles.length - 1; i >= 0; i--) {
-                particles[i].update();
-                particles[i].draw();
-                if (particles[i].life <= 0) {
-                    particles.splice(i, 1);
-                }
-            }
-
-            ctx.restore();
-            requestAnimationFrame(loop);
+        if (!this.special) {
+            ctx.beginPath();
+            ctx.arc(this.x - this.r*0.28, this.y - this.r*0.28, this.r*0.22, 0, Math.PI*2);
+            ctx.fillStyle = "rgba(255,255,255,0.32)";
+            ctx.fill();
         }
+    }
+}
 
+// ================================================================
+// PARTÍCULA
+// ================================================================
+class Particle {
+    constructor(x, y, color) {
+        this.x = x; this.y = y; this.color = color;
+        const ang = Math.random() * Math.PI * 2;
+        const spd = 1.2 + Math.random() * 2.8;
+        this.vx = Math.cos(ang) * spd;
+        this.vy = Math.sin(ang) * spd - 1.2;
+        this.life = 1;
+        this.decay = 0.03 + Math.random() * 0.02;
+        this.size = 2 + Math.random() * 2.5;
+    }
+    update() {
+        this.x += this.vx; this.y += this.vy; this.vy += 0.07; this.life -= this.decay;
+    }
+    draw() {
+        if (this.life <= 0) return;
+        ctx.globalAlpha = this.life;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+}
 
-        // ================================================================
-        // INPUT
-        // ================================================================
-        function getX(e) {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            return (clientX - rect.left) * (canvas.width / rect.width);
-        }
+// ================================================================
+// CORES AUX
+// ================================================================
+function lighten(hex, amt) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = Math.min(255, (n >> 16) + amt);
+    const g = Math.min(255, ((n >> 8) & 255) + amt);
+    const b = Math.min(255, (n & 255) + amt);
+    return "rgb("+r+","+g+","+b+")";
+}
+function darken(hex, amt) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = Math.max(0, (n >> 16) - amt);
+    const g = Math.max(0, ((n >> 8) & 255) - amt);
+    const b = Math.max(0, (n & 255) - amt);
+    return "rgb("+r+","+g+","+b+")";
+}
 
-        canvas.addEventListener("mousemove", function (e) {
-            if (gameOver) return;
-            prepare(getX(e));
-        });
+// ================================================================
+// RESIZE
+// ================================================================
+function resize() {
+    const maxW = Math.min(window.innerWidth - 16, 400);
+    const maxH = window.innerHeight - 90;
+    W = maxW; H = Math.min(maxH, 660);
+    canvas.width = W; canvas.height = H;
+    canvas.style.width = W + "px"; canvas.style.height = H + "px";
+    lastX = W / 2;
+}
 
-        canvas.addEventListener("click", function () {
-            unlockAudio();
-            drop();
-        });
+// ================================================================
+// GERA BOLA
+// ================================================================
+function generateBallData() {
+    let special = null;
+    const roll = Math.random();
+    if (roll < CONFIG.specialChance) {
+        if (currentPhase === 3 && Math.random() < 0.35) special = "mirror";
+        else special = Math.random() < 0.55 ? "rainbow" : "bomb";
+    }
 
-        canvas.addEventListener("touchstart", function (e) {
-            e.preventDefault();
-            unlockAudio();
-            if (gameOver) return;
-            prepare(getX(e));
-        }, { passive: false });
+    let maxLevel = 3;
+    if (score > 200) maxLevel = 4;
+    if (score > 500) maxLevel = 5;
+    if (score > 1000) maxLevel = 5;
+    if (score > 2000) maxLevel = 6;
+    if (score > 4000) maxLevel = 6;
+    if (score > 7000) maxLevel = 7;
+    if (highestLevelReached >= 5) maxLevel = Math.max(maxLevel, 5);
+    if (highestLevelReached >= 7) maxLevel = Math.max(maxLevel, 6);
+    if (highestLevelReached >= 9) maxLevel = Math.max(maxLevel, 7);
+    if (currentPhase >= 2) maxLevel = Math.min(maxLevel + 1, LEVELS.length - 2);
+    if (currentPhase === 3) maxLevel = Math.min(maxLevel + 1, LEVELS.length - 2);
 
-        canvas.addEventListener("touchmove", function (e) {
-            e.preventDefault();
-            if (gameOver) return;
-            prepare(getX(e));
-        }, { passive: false });
+    let level;
+    const r2 = Math.random();
+    if (score > 3000 && r2 < 0.35) level = Math.floor(Math.random()*3) + Math.max(3, maxLevel-2);
+    else if (score > 1500 && r2 < 0.25) level = Math.floor(Math.random()*3) + Math.max(2, maxLevel-2);
+    else level = Math.floor(Math.random() * (maxLevel + 1));
+    level = Math.min(level, maxLevel);
+    return {level: level, special: special};
+}
 
-        canvas.addEventListener("touchend", function (e) {
-            e.preventDefault();
-            drop();
-        }, { passive: false });
+// ================================================================
+// PREVIEW / PREPARE / DROP
+// ================================================================
+function updatePreview() {
+    if (nextSpecial === "rainbow") elNext.style.background = "linear-gradient(135deg,#FF6B6B,#FECA57,#1DD1A1,#54A0FF,#5F27CD)";
+    else if (nextSpecial === "bomb") elNext.style.background = "#222";
+    else if (nextSpecial === "mirror") elNext.style.background = "linear-gradient(135deg,#F8FAFC,#94A3B8)";
+    else elNext.style.background = LEVELS[nextLevel].color;
+    const s = nextSpecial ? 22 : LEVELS[nextLevel].radius * 0.65;
+    elNext.style.width = s + "px"; elNext.style.height = s + "px";
+}
 
-        elRestart.addEventListener("click", restart);
+function prepare(x) {
+    if (!canDrop || gameOver) return;
+    lastX = x;
+    const r = heldSpecial ? 25 : LEVELS[heldLevel].radius;
+    const px = Math.max(r + 2, Math.min(W - r - 2, x));
+    current = new Ball(px, CONFIG.dropY, heldLevel, heldSpecial);
+}
 
-        elGuideBtn.addEventListener("click", function () {
-            elGuide.style.display = "none";
-            localStorage.setItem("sc_guide", "1");
-            elHint.style.display = "block";
-            prepare(lastX);
-        });
+function drop() {
+    if (!current || !canDrop || gameOver) return;
+    unlockAudio();
+    canDrop = false;
+    balls.push(current);
+    current = null;
+    heldLevel = nextLevel;
+    heldSpecial = nextSpecial;
+    const data = generateBallData();
+    nextLevel = data.level;
+    nextSpecial = data.special;
+    updatePreview();
+    prepare(lastX);
+    setTimeout(function(){ canDrop = true; }, 280);
+}
 
+// ================================================================
+// FÍSICA
+// ================================================================
+function physics() {
+    if (balls.length > CONFIG.maxBalls) balls.length = CONFIG.maxBalls;
+    for (let i = 0; i < balls.length; i++) balls[i].update();
 
-        // ================================================================
-        // START
-        // ================================================================
-        function start() {
-            resize();
+    let mergedThisFrame = false;
+    for (let i = 0; i < balls.length; i++) {
+        const a = balls[i];
+        if (!a.alive) continue;
+        for (let j = i + 1; j < balls.length; j++) {
+            const b = balls[j];
+            if (!b.alive) continue;
+            const dx = b.x - a.x, dy = b.y - a.y;
+            const distSq = dx*dx + dy*dy;
+            const minDist = a.r + b.r;
+            if (distSq >= minDist*minDist || distSq < 0.00001) continue;
 
-            // Gera a bola da mão e a do preview
-            const held = generateBallData();
-            heldLevel = held.level;
-            heldSpecial = held.special;
+            const dist = Math.sqrt(distSq);
+            const nx = dx/dist, ny = dy/dist;
+            const overlap = minDist - dist;
+            const total = a.r + b.r;
+            a.x -= nx * overlap * (b.r/total);
+            a.y -= ny * overlap * (b.r/total);
+            b.x += nx * overlap * (a.r/total);
+            b.y += ny * overlap * (a.r/total);
 
-            const nxt = generateBallData();
-            nextLevel = nxt.level;
-            nextSpecial = nxt.special;
-            updatePreview();
+            const dvx = a.vx - b.vx, dvy = a.vy - b.vy;
+            const imp = (dvx*nx + dvy*ny) * CONFIG.restitution;
+            a.vx -= imp*nx; a.vy -= imp*ny;
+            b.vx += imp*nx; b.vy += imp*ny;
 
-            // Mostra o recorde na tela
-            elRecord.textContent = highScore;
+            if (mergedThisFrame) continue;
 
-            prepare(lastX);
+            let doMerge = false, type = null;
+            if (a.special === "bomb" || b.special === "bomb") { doMerge = true; type = "bomb"; }
+            else if (a.special === "rainbow" || b.special === "rainbow") { doMerge = true; type = "rainbow"; }
+            else if (a.special === "mirror" || b.special === "mirror") { doMerge = true; type = "mirror"; }
+            else if (a.level === b.level && a.level < LEVELS.length - 1) { doMerge = true; type = "normal"; }
 
-            if (!localStorage.getItem("sc_guide")) {
-                elGuide.style.display = "flex";
-                elHint.style.display = "none";
+            if (doMerge) {
+                mergedThisFrame = true;
+                if (type === "bomb") doBomb(a.special === "bomb" ? a : b);
+                else if (type === "rainbow") doRainbow(a, b);
+                else if (type === "mirror") doMirror(a, b);
+                else doNormal(a, b);
             }
-
-            loop();
         }
+    }
+    balls = balls.filter(function(b){ return b.alive; });
+}
 
-        window.addEventListener("resize", resize);
+// ================================================================
+// MERGES
+// ================================================================
+function doNormal(a, b) {
+    a.alive = false; b.alive = false;
+    const lvl = a.level + 1;
+    const nx = (a.x + b.x)/2, ny = (a.y + b.y)/2;
+    if (lvl > highestLevelReached) highestLevelReached = lvl;
+    const neu = new Ball(nx, ny, lvl, null);
+    neu.vx = (a.vx + b.vx)*0.2; neu.vy = (a.vy + b.vy)*0.2 - 1;
+    balls.push(neu);
+    addScore(LEVELS[lvl].score);
+    spawn(nx, ny, LEVELS[lvl].color, 6);
+    shake = Math.max(shake, 3);
+    playPop();
+    if (currentPhase === 3 && lvl >= 8 && Math.random() < 0.5) triggerChainGrowth(lvl);
+}
 
-        document.body.addEventListener("touchmove", function (e) {
-            if (e.target === canvas) e.preventDefault();
-        }, { passive: false });
+function doRainbow(a, b) {
+    a.alive = false; b.alive = false;
+    const normal = a.special === "rainbow" ? b : a;
+    const lvl = Math.min(normal.level + 1, LEVELS.length - 1);
+    const nx = (a.x + b.x)/2, ny = (a.y + b.y)/2;
+    if (lvl > highestLevelReached) highestLevelReached = lvl;
+    const neu = new Ball(nx, ny, lvl, null);
+    neu.vx = (a.vx + b.vx)*0.2; neu.vy = (a.vy + b.vy)*0.2 - 1;
+    balls.push(neu);
+    addScore(LEVELS[lvl].score * 2);
+    spawn(nx, ny, "#ffffff", 9);
+    shake = Math.max(shake, 5);
+    playPop();
+}
 
-        start();
-    </script>
+function doMirror(a, b) {
+    const mirror = a.special === "mirror" ? a : b;
+    const other = a.special === "mirror" ? b : a;
+    mirror.alive = false; other.alive = false;
+    const lvl = other.level;
+    const nx = (a.x + b.x)/2, ny = (a.y + b.y)/2;
+    const b1 = new Ball(nx - 10, ny, lvl, null);
+    const b2 = new Ball(nx + 10, ny, lvl, null);
+    b1.vx = -1; b2.vx = 1;
+    balls.push(b1); balls.push(b2);
+    addScore(LEVELS[lvl].score);
+    spawn(nx, ny, "#E2E8F0", 8);
+    shake = Math.max(shake, 4);
+    playPop();
+}
+
+function doBomb(bomb) {
+    bomb.alive = false;
+    const radius = 80;
+    for (let i = 0; i < balls.length; i++) {
+        const o = balls[i];
+        if (!o.alive || o === bomb) continue;
+        const dx = o.x - bomb.x, dy = o.y - bomb.y;
+        if (dx*dx + dy*dy < radius*radius) {
+            o.alive = false;
+            spawn(o.x, o.y, o.color, 4);
+        }
+    }
+    spawn(bomb.x, bomb.y, "#ff3333", 11);
+    shake = Math.max(shake, 7);
+    addScore(40);
+    playBomb();
+}
+
+function triggerChainGrowth(level) {
+    for (let i = 0; i < balls.length; i++) {
+        const b = balls[i];
+        if (!b.alive || b.special) continue;
+        if (b.level === level && b.level < LEVELS.length - 1) {
+            b.level += 1;
+            b.r = LEVELS[b.level].radius;
+            b.color = LEVELS[b.level].color;
+            spawn(b.x, b.y, b.color, 4);
+        }
+    }
+    shake = Math.max(shake, 5);
+}
+
+// ================================================================
+// SCORE
+// ================================================================
+function addScore(base) {
+    combo += 1;
+    comboTimer = 75;
+    multiplier = Math.min(1 + Math.floor(combo / 2), 7);
+    const phaseMult = getScoreMultiplier();
+    score += base * multiplier * phaseMult;
+    elScore.textContent = score;
+    elComboVal.textContent = multiplier;
+    elCombo.classList.add("show");
+    checkUnlocks();
+}
+
+function updateCombo() {
+    if (comboTimer > 0) {
+        comboTimer -= 1;
+        if (comboTimer <= 0) {
+            combo = 0; multiplier = 1;
+            elCombo.classList.remove("show");
+        }
+    }
+}
+
+// ================================================================
+// PARTÍCULAS
+// ================================================================
+function spawn(x, y, color, n) {
+    if (particles.length > 35) return;
+    for (let i = 0; i < n; i++) particles.push(new Particle(x, y, color));
+}
+
+// ================================================================
+// GAME OVER
+// ================================================================
+function checkLose() {
+    let danger = false;
+    for (let i = 0; i < balls.length; i++) {
+        const b = balls[i];
+        if (!b.alive) continue;
+        if (b.y - b.r >= CONFIG.dangerLine) b.passedBelowDangerLine = true;
+        if (b.passedBelowDangerLine && b.y - b.r < CONFIG.dangerLine) { danger = true; break; }
+    }
+    if (danger) {
+        dangerTimer++;
+        if (dangerTimer >= 48) endGame();
+    } else {
+        dangerTimer = 0;
+    }
+}
+
+function endGame() {
+    if (gameOver) return;
+    gameOver = true;
+    let isNew = false;
+    let currentHigh = highScore1;
+    if (currentPhase === 2) currentHigh = highScore2;
+    if (currentPhase === 3) currentHigh = highScore3;
+
+    if (score > currentHigh) {
+        if (currentPhase === 1) { highScore1 = score; localStorage.setItem("sc_high_1", highScore1.toString()); }
+        else if (currentPhase === 2) { highScore2 = score; localStorage.setItem("sc_high_2", highScore2.toString()); }
+        else { highScore3 = score; localStorage.setItem("sc_high_3", highScore3.toString()); }
+        isNew = true;
+    }
+
+    elFinal.textContent = score;
+    elFinalRecord.textContent = currentPhase === 1 ? highScore1 : (currentPhase === 2 ? highScore2 : highScore3);
+    elRecord.textContent = elFinalRecord.textContent;
+    elNewRecord.style.display = isNew ? "block" : "none";
+    elGameOver.style.display = "flex";
+    elHint.style.display = "none";
+}
+
+// ================================================================
+// FASES
+// ================================================================
+function setPhase(phase) {
+    currentPhase = phase;
+    elContainer.classList.remove("phase-2", "phase-3");
+    if (phase === 1) {
+        LEVELS = LEVELS_P1;
+        elPhaseLabel.textContent = "FASE 1";
+        elRecord.textContent = highScore1;
+    } else if (phase === 2) {
+        LEVELS = LEVELS_P2;
+        elContainer.classList.add("phase-2");
+        elPhaseLabel.textContent = "FASE 2";
+        elRecord.textContent = highScore2;
+    } else {
+        LEVELS = LEVELS_P3;
+        elContainer.classList.add("phase-3");
+        elPhaseLabel.textContent = "FASE 3";
+        elRecord.textContent = highScore3;
+    }
+    restartGameOnly();
+}
+
+function restartGameOnly() {
+    balls = []; particles = []; score = 0; gameOver = false; canDrop = true; current = null;
+    combo = 0; multiplier = 1; comboTimer = 0; shake = 0; highestLevelReached = 0; dangerTimer = 0;
+    elScore.textContent = "0"; elCombo.classList.remove("show");
+    elGameOver.style.display = "none"; elHint.style.display = "block";
+    const held = generateBallData(); heldLevel = held.level; heldSpecial = held.special;
+    const nxt = generateBallData(); nextLevel = nxt.level; nextSpecial = nxt.special;
+    updatePreview(); prepare(lastX);
+}
+
+function restart() { restartGameOnly(); }
+
+// ================================================================
+// DESBLOQUEIOS
+// ================================================================
+function checkUnlocks() {
+    if (!phase2Unlocked && !unlockShown2 && currentPhase === 1 && score >= CONFIG.phase2Unlock) {
+        phase2Unlocked = true; localStorage.setItem("sc_unlocked_2", "1");
+        unlockShown2 = true; pendingUnlockPhase = 2;
+        elUnlockTitle.textContent = "Fase 2 Desbloqueada!";
+        elUnlockText.textContent = "Parabéns! Você alcançou 70.000 pontos e liberou a segunda fase.";
+        elUnlockScreen.style.display = "flex"; updateMenuButtons();
+    }
+    if (!phase3Unlocked && !unlockShown3 && currentPhase === 2 && score >= CONFIG.phase3Unlock) {
+        phase3Unlocked = true; localStorage.setItem("sc_unlocked_3", "1");
+        unlockShown3 = true; pendingUnlockPhase = 3;
+        elUnlockTitle.textContent = "Fase 3 Desbloqueada!";
+        elUnlockText.textContent = "Parabéns! Você alcançou 110.000 pontos e liberou a terceira fase.";
+        elUnlockScreen.style.display = "flex"; updateMenuButtons();
+    }
+}
+
+// ================================================================
+// MENU
+// ================================================================
+function openMenu() {
+    elMenuRec1.textContent = highScore1;
+    elMenuRec2.textContent = highScore2;
+    elMenuRec3.textContent = highScore3;
+    elMenuRecTotal.textContent = highScore1 + highScore2 + highScore3;
+    updateMenuButtons();
+    elMenuScreen.style.display = "flex";
+}
+
+function closeMenu() { elMenuScreen.style.display = "none"; }
+
+function updateMenuButtons() {
+    elBtnPhase1.classList.toggle("active", currentPhase === 1);
+    if (phase2Unlocked) {
+        elBtnPhase2.classList.remove("locked");
+        elBtnPhase2.querySelector(".lock-text").style.display = "none";
+        elBtnPhase2.classList.toggle("active", currentPhase === 2);
+    } else {
+        elBtnPhase2.classList.add("locked");
+        elBtnPhase2.querySelector(".lock-text").style.display = "inline";
+        elBtnPhase2.classList.remove("active");
+    }
+    if (phase3Unlocked) {
+        elBtnPhase3.classList.remove("locked");
+        elBtnPhase3.querySelector(".lock-text").style.display = "none";
+        elBtnPhase3.classList.toggle("active", currentPhase === 3);
+    } else {
+        elBtnPhase3.classList.add("locked");
+        elBtnPhase3.querySelector(".lock-text").style.display = "inline";
+        elBtnPhase3.classList.remove("active");
+    }
+}
+
+// ================================================================
+// DESENHO / LOOP
+// ================================================================
+function drawDanger() {
+    let near = false;
+    for (let i = 0; i < balls.length; i++) {
+        if (balls[i].y - balls[i].r < CONFIG.dangerLine + 45) { near = true; break; }
+    }
+    ctx.beginPath();
+    ctx.setLineDash([5, 5]);
+    ctx.moveTo(0, CONFIG.dangerLine);
+    ctx.lineTo(W, CONFIG.dangerLine);
+    if (near) {
+        const p = 0.4 + Math.sin(Date.now()/140)*0.25;
+        ctx.strokeStyle = "rgba(255,55,55,"+p+")";
+        ctx.lineWidth = 2.5;
+    } else {
+        ctx.strokeStyle = "rgba(255,70,70,0.28)";
+        ctx.lineWidth = 1.8;
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+}
+
+function loop() {
+    ctx.save();
+    if (shake > 0.4) {
+        ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
+        shake *= 0.88;
+    } else shake = 0;
+
+    if (currentPhase === 3) ctx.fillStyle = "#120810";
+    else if (currentPhase === 2) ctx.fillStyle = "#0a1f1f";
+    else ctx.fillStyle = "#0f0d1f";
+    ctx.fillRect(0, 0, W, H);
+
+    drawDanger();
+    if (!gameOver) { physics(); checkLose(); updateCombo(); }
+    for (let i = 0; i < balls.length; i++) balls[i].draw();
+    if (current) current.draw();
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update(); particles[i].draw();
+        if (particles[i].life <= 0) particles.splice(i, 1);
+    }
+    ctx.restore();
+    requestAnimationFrame(loop);
+}
+
+// ================================================================
+// INPUT
+// ================================================================
+function getX(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    return (clientX - rect.left) * (canvas.width / rect.width);
+}
+
+canvas.addEventListener("mousemove", function(e){ if(gameOver) return; prepare(getX(e)); });
+canvas.addEventListener("click", function(){ unlockAudio(); drop(); });
+canvas.addEventListener("touchstart", function(e){ e.preventDefault(); unlockAudio(); if(gameOver) return; prepare(getX(e)); }, {passive:false});
+canvas.addEventListener("touchmove", function(e){ e.preventDefault(); if(gameOver) return; prepare(getX(e)); }, {passive:false});
+canvas.addEventListener("touchend", function(e){ e.preventDefault(); drop(); }, {passive:false});
+
+elRestart.addEventListener("click", restart);
+elGuideBtn.addEventListener("click", function(){
+    elGuide.style.display = "none";
+    localStorage.setItem("sc_guide", "1");
+    elHint.style.display = "block";
+    elMechanicsGuide.style.display = "flex";
+});
+elMenuBtn.addEventListener("click", openMenu);
+elMenuClose.addEventListener("click", closeMenu);
+elBtnGoNext.addEventListener("click", function(){
+    elUnlockScreen.style.display = "none";
+    if (pendingUnlockPhase > 0) { setPhase(pendingUnlockPhase); pendingUnlockPhase = 0; }
+});
+elBtnStay.addEventListener("click", function(){ elUnlockScreen.style.display = "none"; pendingUnlockPhase = 0; });
+elBtnPhase1.addEventListener("click", function(){ if(currentPhase===1){closeMenu();return;} setPhase(1); closeMenu(); });
+elBtnPhase2.addEventListener("click", function(){ if(!phase2Unlocked) return; if(currentPhase===2){closeMenu();return;} setPhase(2); closeMenu(); });
+elBtnPhase3.addEventListener("click", function(){ if(!phase3Unlocked) return; if(currentPhase===3){closeMenu();return;} setPhase(3); closeMenu(); });
+elMenuGuideBtn.addEventListener("click", function(){ closeMenu(); elMechanicsGuide.style.display = "flex"; });
+elGuideClose.addEventListener("click", function(){ elMechanicsGuide.style.display = "none"; prepare(lastX); });
+
+// ================================================================
+// START
+// ================================================================
+function start() {
+    resize();
+    const held = generateBallData(); heldLevel = held.level; heldSpecial = held.special;
+    const nxt = generateBallData(); nextLevel = nxt.level; nextSpecial = nxt.special;
+    updatePreview();
+    elRecord.textContent = highScore1;
+    prepare(lastX);
+    if (!localStorage.getItem("sc_guide")) {
+        elGuide.style.display = "flex";
+        elHint.style.display = "none";
+    }
+    loop();
+}
+
+window.addEventListener("resize", resize);
+document.body.addEventListener("touchmove", function(e){ if(e.target===canvas) e.preventDefault(); }, {passive:false});
+start();
+</script>
 </body>
 </html>
