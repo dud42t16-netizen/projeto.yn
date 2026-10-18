@@ -10,9 +10,11 @@
         #game-container{position:relative;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 0%,#1a1440 0%,#0d0b1a 70%);transition:background .6s ease}
         #game-container.phase-2{background:radial-gradient(ellipse at 50% 0%,#0f2a2a 0%,#0a1a1a 70%)}
         #game-container.phase-3{background:radial-gradient(ellipse at 50% 0%,#1a0a1a 0%,#0d0610 70%)}
+        #game-container.phase-4{background:radial-gradient(ellipse at 50% 0%,#1a1030 0%,#0e0a1c 65%)}
         #gameCanvas{display:block;border-radius:16px;box-shadow:0 0 60px rgba(120,80,255,.12),inset 0 0 0 1px rgba(255,255,255,.04);touch-action:none;background:rgba(255,255,255,.02)}
         #game-container.phase-2 #gameCanvas{box-shadow:0 0 60px rgba(45,212,191,.12),inset 0 0 0 1px rgba(255,255,255,.04)}
         #game-container.phase-3 #gameCanvas{box-shadow:0 0 60px rgba(190,24,93,.15),inset 0 0 0 1px rgba(255,255,255,.04)}
+        #game-container.phase-4 #gameCanvas{box-shadow:0 0 70px rgba(240,171,252,.18),inset 0 0 0 1px rgba(255,255,255,.06)}
         #ui-top{position:absolute;top:14px;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:0 18px;z-index:10;pointer-events:none}
         .ui-box{background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:14px;padding:9px 16px;color:#fff;font-size:14px;font-weight:600;letter-spacing:.3px;border:1px solid rgba(255,255,255,.07)}
         #left-ui{display:flex;flex-direction:column;gap:6px;pointer-events:auto}
@@ -120,12 +122,14 @@
                 <div class="menu-record-row"><span class="label">Recorde Fase 1</span><span class="value" id="menu-rec-1">0</span></div>
                 <div class="menu-record-row"><span class="label">Recorde Fase 2</span><span class="value" id="menu-rec-2">0</span></div>
                 <div class="menu-record-row"><span class="label">Recorde Fase 3</span><span class="value" id="menu-rec-3">0</span></div>
+                <div class="menu-record-row"><span class="label">Recorde Fase 4</span><span class="value" id="menu-rec-4">0</span></div>
                 <div class="menu-record-row total"><span class="label">Recorde Total</span><span class="value" id="menu-rec-total">0</span></div>
             </div>
             <div class="menu-phases">
                 <button class="phase-btn active" id="btn-phase1"><span>Fase 1</span></button>
                 <button class="phase-btn locked" id="btn-phase2"><span>Fase 2</span><span class="lock-text">Bloqueada</span></button>
                 <button class="phase-btn locked" id="btn-phase3"><span>Fase 3</span><span class="lock-text">Bloqueada</span></button>
+                <button class="phase-btn locked" id="btn-phase4"><span>Fase 4</span><span class="lock-text">Bloqueada</span></button>
             </div>
             <button id="menu-guide-btn">Guia de Mecânicas</button>
             <button id="menu-close">Fechar</button>
@@ -139,7 +143,8 @@
             <div class="mech-item"><h3>Bola Arco-íris</h3><p>Se funde com qualquer bola, criando uma do próximo nível.</p></div>
             <div class="mech-item"><h3>Bola Espelho (Fase 3)</h3><p>Ao tocar em outra bola, copia o nível dela e se transforma na mesma.</p></div>
             <div class="mech-item"><h3>Crescimento em Cadeia (Fase 3)</h3><p>Ao fazer um merge de nível 8 ou superior, 50% de chance de todas as bolas do mesmo nível na tela subirem +1 nível.</p></div>
-            <div class="mech-item"><h3>Pontuação por Fase</h3><p>Fase 1 = x1 | Fase 2 = x2 | Fase 3 = x3</p></div>
+            <div class="mech-item"><h3>Bola Prisma (Fase 4)</h3><p>Cai onde você escolher. Ao acertar bolas, faz merge e remove as atingidas. Os pontos contam normalmente.</p></div>
+            <div class="mech-item"><h3>Pontuação por Fase</h3><p>Fase 1 = x1 | Fase 2 = x2 | Fase 3 = x3 | Fase 4 = x4</p></div>
             <button id="guide-close">Entendi</button>
         </div>
     </div>
@@ -167,7 +172,8 @@
         maxBalls: 55,
         specialChance: 0.07,
         phase2Unlock: 70000,
-        phase3Unlock: 120000
+        phase3Unlock: 110000,
+        phase4Unlock: 180000
     };
 
     // ================================================================
@@ -224,6 +230,24 @@
         {radius:132,color:"#2E1065",score:16384}
     ];
 
+    const LEVELS_P4 = [
+        {radius:15,color:"#F8FAFC",score:1},
+        {radius:19,color:"#0A0A0A",score:2},
+        {radius:23,color:"#1E3A8A",score:4},
+        {radius:28,color:"#059669",score:8},
+        {radius:33,color:"#E11D48",score:16},
+        {radius:39,color:"#7C3AED",score:32},
+        {radius:45,color:"#F59E0B",score:64},
+        {radius:52,color:"#06B6D4",score:128},
+        {radius:60,color:"#F472B6",score:256},
+        {radius:70,color:"#EAB308",score:512},
+        {radius:82,color:"#2563EB",score:1024},
+        {radius:94,color:"#84CC16",score:2048},
+        {radius:108,color:"#BE123C",score:4096},
+        {radius:120,color:"#A78BFA",score:8192},
+        {radius:132,color:"#F0ABFC",score:16384}
+    ];
+
     let LEVELS = LEVELS_P1;
 
     // ================================================================
@@ -270,12 +294,15 @@
     let highScore1 = parseInt(localStorage.getItem("sc_high_1") || "0");
     let highScore2 = parseInt(localStorage.getItem("sc_high_2") || "0");
     let highScore3 = parseInt(localStorage.getItem("sc_high_3") || "0");
+    let highScore4 = parseInt(localStorage.getItem("sc_high_4") || "0");
 
     let phase2Unlocked = localStorage.getItem("sc_unlocked_2") === "1" || localStorage.getItem("sc_dev") === "1";
     let phase3Unlocked = localStorage.getItem("sc_unlocked_3") === "1" || localStorage.getItem("sc_dev") === "1";
+    let phase4Unlocked = localStorage.getItem("sc_unlocked_4") === "1" || localStorage.getItem("sc_dev") === "1";
 
     let unlockShown2 = false;
     let unlockShown3 = false;
+    let unlockShown4 = false;
     let pendingUnlockPhase = 0;
 
     let heldLevel = 0, heldSpecial = null;
@@ -312,9 +339,11 @@
     const elBtnPhase1 = document.getElementById("btn-phase1");
     const elBtnPhase2 = document.getElementById("btn-phase2");
     const elBtnPhase3 = document.getElementById("btn-phase3");
+    const elBtnPhase4 = document.getElementById("btn-phase4");
     const elMenuRec1 = document.getElementById("menu-rec-1");
     const elMenuRec2 = document.getElementById("menu-rec-2");
     const elMenuRec3 = document.getElementById("menu-rec-3");
+    const elMenuRec4 = document.getElementById("menu-rec-4");
     const elMenuRecTotal = document.getElementById("menu-rec-total");
     const elContainer = document.getElementById("game-container");
     const elMenuGuideBtn = document.getElementById("menu-guide-btn");
@@ -327,6 +356,7 @@
     function getScoreMultiplier() {
         if (currentPhase === 2) return 2;
         if (currentPhase === 3) return 3;
+        if (currentPhase === 4) return 4;
         return 1;
     }
 
@@ -354,6 +384,9 @@
             } else if (this.special === "mirror") {
                 this.r = 24;
                 this.color = "#E2E8F0";
+            } else if (this.special === "prism") {
+                this.r = 24;
+                this.color = "#E0F2FE";
             } else {
                 this.r = LEVELS[level].radius;
                 this.color = LEVELS[level].color;
@@ -381,6 +414,38 @@
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
 
+            // Visual de cristal (Fase 4)
+            if (currentPhase === 4 && !this.special) {
+                const g = ctx.createRadialGradient(
+                    this.x - this.r * 0.35, this.y - this.r * 0.35, this.r * 0.05,
+                    this.x, this.y, this.r
+                );
+                g.addColorStop(0, lighten(this.color, 55));
+                g.addColorStop(0.45, this.color);
+                g.addColorStop(1, darken(this.color, 25));
+                ctx.fillStyle = g;
+                ctx.globalAlpha = 0.88;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r - 0.5, 0, Math.PI * 2);
+                ctx.strokeStyle = "rgba(255,255,255,0.45)";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.ellipse(this.x - this.r * 0.28, this.y - this.r * 0.32, this.r * 0.28, this.r * 0.18, -0.4, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(255,255,255,0.55)";
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(this.x + this.r * 0.22, this.y + this.r * 0.25, this.r * 0.12, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(255,255,255,0.25)";
+                ctx.fill();
+                return;
+            }
+
             if (this.special === "rainbow") {
                 const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
                 g.addColorStop(0,"#FF6B6B"); g.addColorStop(0.2,"#FECA57"); g.addColorStop(0.4,"#1DD1A1");
@@ -392,8 +457,15 @@
                 const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
                 g.addColorStop(0,"#F8FAFC"); g.addColorStop(0.7,"#CBD5E1"); g.addColorStop(1,"#94A3B8");
                 ctx.fillStyle = g;
+            } else if (this.special === "prism") {
+                const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
+                g.addColorStop(0,"#F0F9FF"); g.addColorStop(0.5,"#7DD3FC"); g.addColorStop(1,"#0EA5E9");
+                ctx.fillStyle = g;
             } else {
-                const g = ctx.createRadialGradient(this.x - this.r*0.3, this.y - this.r*0.3, this.r*0.1, this.x, this.y, this.r);
+                const g = ctx.createRadialGradient(
+                    this.x - this.r * 0.3, this.y - this.r * 0.3, this.r * 0.1,
+                    this.x, this.y, this.r
+                );
                 g.addColorStop(0, lighten(this.color, 40));
                 g.addColorStop(0.65, this.color);
                 g.addColorStop(1, darken(this.color, 30));
@@ -414,9 +486,19 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
             }
+            if (this.special === "prism") {
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y - this.r * 0.35);
+                ctx.lineTo(this.x + this.r * 0.3, this.y + this.r * 0.25);
+                ctx.lineTo(this.x - this.r * 0.3, this.y + this.r * 0.25);
+                ctx.closePath();
+                ctx.strokeStyle = "rgba(255,255,255,0.7)";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            }
             if (!this.special) {
                 ctx.beginPath();
-                ctx.arc(this.x - this.r*0.28, this.y - this.r*0.28, this.r*0.22, 0, Math.PI*2);
+                ctx.arc(this.x - this.r * 0.28, this.y - this.r * 0.28, this.r * 0.22, 0, Math.PI * 2);
                 ctx.fillStyle = "rgba(255,255,255,0.32)";
                 ctx.fill();
             }
@@ -488,7 +570,8 @@
         let special = null;
         const roll = Math.random();
         if (roll < CONFIG.specialChance) {
-            if (currentPhase === 3 && Math.random() < 0.35) special = "mirror";
+            if (currentPhase === 4 && Math.random() < 0.35) special = "prism";
+            else if (currentPhase === 3 && Math.random() < 0.35) special = "mirror";
             else special = Math.random() < 0.55 ? "rainbow" : "bomb";
         }
 
@@ -503,7 +586,8 @@
         if (highestLevelReached >= 7) maxLevel = Math.max(maxLevel, 6);
         if (highestLevelReached >= 9) maxLevel = Math.max(maxLevel, 7);
         if (currentPhase >= 2) maxLevel = Math.min(maxLevel + 1, LEVELS.length - 2);
-        if (currentPhase === 3) maxLevel = Math.min(maxLevel + 1, LEVELS.length - 2);
+        if (currentPhase >= 3) maxLevel = Math.min(maxLevel + 1, LEVELS.length - 2);
+        if (currentPhase === 4) maxLevel = Math.min(maxLevel + 1, LEVELS.length - 2);
 
         let level;
         const r2 = Math.random();
@@ -521,6 +605,7 @@
         if (nextSpecial === "rainbow") elNext.style.background = "linear-gradient(135deg,#FF6B6B,#FECA57,#1DD1A1,#54A0FF,#5F27CD)";
         else if (nextSpecial === "bomb") elNext.style.background = "#222";
         else if (nextSpecial === "mirror") elNext.style.background = "linear-gradient(135deg,#F8FAFC,#94A3B8)";
+        else if (nextSpecial === "prism") elNext.style.background = "linear-gradient(135deg,#F0F9FF,#0EA5E9)";
         else elNext.style.background = LEVELS[nextLevel].color;
         const s = nextSpecial ? 22 : LEVELS[nextLevel].radius * 0.65;
         elNext.style.width = s + "px"; elNext.style.height = s + "px";
@@ -589,6 +674,7 @@
                 if (a.special === "bomb" || b.special === "bomb") { doMerge = true; type = "bomb"; }
                 else if (a.special === "rainbow" || b.special === "rainbow") { doMerge = true; type = "rainbow"; }
                 else if (a.special === "mirror" || b.special === "mirror") { doMerge = true; type = "mirror"; }
+                else if (a.special === "prism" || b.special === "prism") { doMerge = true; type = "prism"; }
                 else if (a.level === b.level && a.level < LEVELS.length - 1) { doMerge = true; type = "normal"; }
 
                 if (doMerge) {
@@ -596,6 +682,7 @@
                     if (type === "bomb") doBomb(a.special === "bomb" ? a : b);
                     else if (type === "rainbow") doRainbow(a, b);
                     else if (type === "mirror") doMirror(a, b);
+                    else if (type === "prism") doPrism(a, b);
                     else doNormal(a, b);
                 }
             }
@@ -649,6 +736,22 @@
         addScore(LEVELS[lvl].score);
         spawn(nx, ny, "#E2E8F0", 8);
         shake = Math.max(shake, 4);
+        playPop();
+    }
+
+    function doPrism(a, b) {
+        const prism = a.special === "prism" ? a : b;
+        const other = a.special === "prism" ? b : a;
+        prism.alive = false;
+        other.alive = false;
+        const nx = (a.x + b.x)/2, ny = (a.y + b.y)/2;
+        if (!other.special && LEVELS[other.level]) {
+            addScore(LEVELS[other.level].score);
+        } else {
+            addScore(20);
+        }
+        spawn(nx, ny, "#7DD3FC", 10);
+        shake = Math.max(shake, 5);
         playPop();
     }
 
@@ -718,19 +821,40 @@
     }
 
     // ================================================================
-    // GAME OVER
+    // GAME OVER (REFORÇADO)
     // ================================================================
     function checkLose() {
         let danger = false;
+        let ballsAbove = 0;
+
         for (let i = 0; i < balls.length; i++) {
             const b = balls[i];
             if (!b.alive) continue;
-            if (b.y - b.r >= CONFIG.dangerLine) b.passedBelowDangerLine = true;
-            if (b.passedBelowDangerLine && b.y - b.r < CONFIG.dangerLine) { danger = true; break; }
+
+            if (b.y - b.r >= CONFIG.dangerLine) {
+                b.passedBelowDangerLine = true;
+            }
+
+            if (b.passedBelowDangerLine && b.y - b.r < CONFIG.dangerLine) {
+                danger = true;
+                ballsAbove++;
+            }
+
+            // Reforço extra: bola claramente acima e quase parada
+            if (b.y - b.r < CONFIG.dangerLine - 8 && Math.abs(b.vy) < 0.8 && Math.abs(b.vx) < 0.8) {
+                if (b.passedBelowDangerLine) {
+                    danger = true;
+                    ballsAbove++;
+                }
+            }
         }
+
         if (danger) {
             dangerTimer++;
-            if (dangerTimer >= 48) endGame();
+            const threshold = ballsAbove >= 2 ? 32 : 42;
+            if (dangerTimer >= threshold) {
+                endGame();
+            }
         } else {
             dangerTimer = 0;
         }
@@ -739,20 +863,34 @@
     function endGame() {
         if (gameOver) return;
         gameOver = true;
+
         let isNew = false;
         let currentHigh = highScore1;
         if (currentPhase === 2) currentHigh = highScore2;
         if (currentPhase === 3) currentHigh = highScore3;
+        if (currentPhase === 4) currentHigh = highScore4;
 
         if (score > currentHigh) {
-            if (currentPhase === 1) { highScore1 = score; localStorage.setItem("sc_high_1", highScore1.toString()); }
-            else if (currentPhase === 2) { highScore2 = score; localStorage.setItem("sc_high_2", highScore2.toString()); }
-            else { highScore3 = score; localStorage.setItem("sc_high_3", highScore3.toString()); }
+            if (currentPhase === 1) {
+                highScore1 = score;
+                localStorage.setItem("sc_high_1", highScore1.toString());
+            } else if (currentPhase === 2) {
+                highScore2 = score;
+                localStorage.setItem("sc_high_2", highScore2.toString());
+            } else if (currentPhase === 3) {
+                highScore3 = score;
+                localStorage.setItem("sc_high_3", highScore3.toString());
+            } else {
+                highScore4 = score;
+                localStorage.setItem("sc_high_4", highScore4.toString());
+            }
             isNew = true;
         }
 
         elFinal.textContent = score;
-        elFinalRecord.textContent = currentPhase === 1 ? highScore1 : (currentPhase === 2 ? highScore2 : highScore3);
+        elFinalRecord.textContent = currentPhase === 1 ? highScore1 :
+                                    currentPhase === 2 ? highScore2 :
+                                    currentPhase === 3 ? highScore3 : highScore4;
         elRecord.textContent = elFinalRecord.textContent;
         elNewRecord.style.display = isNew ? "block" : "none";
         elGameOver.style.display = "flex";
@@ -764,7 +902,8 @@
     // ================================================================
     function setPhase(phase) {
         currentPhase = phase;
-        elContainer.classList.remove("phase-2", "phase-3");
+        elContainer.classList.remove("phase-2", "phase-3", "phase-4");
+
         if (phase === 1) {
             LEVELS = LEVELS_P1;
             elPhaseLabel.textContent = "FASE 1";
@@ -774,11 +913,16 @@
             elContainer.classList.add("phase-2");
             elPhaseLabel.textContent = "FASE 2";
             elRecord.textContent = highScore2;
-        } else {
+        } else if (phase === 3) {
             LEVELS = LEVELS_P3;
             elContainer.classList.add("phase-3");
             elPhaseLabel.textContent = "FASE 3";
             elRecord.textContent = highScore3;
+        } else {
+            LEVELS = LEVELS_P4;
+            elContainer.classList.add("phase-4");
+            elPhaseLabel.textContent = "FASE 4";
+            elRecord.textContent = highScore4;
         }
         restartGameOnly();
     }
@@ -813,6 +957,13 @@
             elUnlockText.textContent = "Parabéns! Você alcançou 110.000 pontos e liberou a terceira fase.";
             elUnlockScreen.style.display = "flex"; updateMenuButtons();
         }
+        if (!phase4Unlocked && !unlockShown4 && currentPhase === 3 && score >= CONFIG.phase4Unlock) {
+            phase4Unlocked = true; localStorage.setItem("sc_unlocked_4", "1");
+            unlockShown4 = true; pendingUnlockPhase = 4;
+            elUnlockTitle.textContent = "Fase 4 Desbloqueada!";
+            elUnlockText.textContent = "Parabéns! Você alcançou 180.000 pontos e liberou a quarta fase.";
+            elUnlockScreen.style.display = "flex"; updateMenuButtons();
+        }
     }
 
     // ================================================================
@@ -822,7 +973,8 @@
         elMenuRec1.textContent = highScore1;
         elMenuRec2.textContent = highScore2;
         elMenuRec3.textContent = highScore3;
-        elMenuRecTotal.textContent = highScore1 + highScore2 + highScore3;
+        elMenuRec4.textContent = highScore4;
+        elMenuRecTotal.textContent = highScore1 + highScore2 + highScore3 + highScore4;
         updateMenuButtons();
         elMenuScreen.style.display = "flex";
     }
@@ -831,6 +983,7 @@
 
     function updateMenuButtons() {
         elBtnPhase1.classList.toggle("active", currentPhase === 1);
+
         if (phase2Unlocked) {
             elBtnPhase2.classList.remove("locked");
             elBtnPhase2.querySelector(".lock-text").style.display = "none";
@@ -840,6 +993,7 @@
             elBtnPhase2.querySelector(".lock-text").style.display = "inline";
             elBtnPhase2.classList.remove("active");
         }
+
         if (phase3Unlocked) {
             elBtnPhase3.classList.remove("locked");
             elBtnPhase3.querySelector(".lock-text").style.display = "none";
@@ -848,6 +1002,16 @@
             elBtnPhase3.classList.add("locked");
             elBtnPhase3.querySelector(".lock-text").style.display = "inline";
             elBtnPhase3.classList.remove("active");
+        }
+
+        if (phase4Unlocked) {
+            elBtnPhase4.classList.remove("locked");
+            elBtnPhase4.querySelector(".lock-text").style.display = "none";
+            elBtnPhase4.classList.toggle("active", currentPhase === 4);
+        } else {
+            elBtnPhase4.classList.add("locked");
+            elBtnPhase4.querySelector(".lock-text").style.display = "inline";
+            elBtnPhase4.classList.remove("active");
         }
     }
 
@@ -882,7 +1046,8 @@
             shake *= 0.88;
         } else shake = 0;
 
-        if (currentPhase === 3) ctx.fillStyle = "#120810";
+        if (currentPhase === 4) ctx.fillStyle = "#110c1c";
+        else if (currentPhase === 3) ctx.fillStyle = "#120810";
         else if (currentPhase === 2) ctx.fillStyle = "#0a1f1f";
         else ctx.fillStyle = "#0f0d1f";
         ctx.fillRect(0, 0, W, H);
@@ -931,6 +1096,7 @@
     elBtnPhase1.addEventListener("click", function(){ if(currentPhase===1){closeMenu();return;} setPhase(1); closeMenu(); });
     elBtnPhase2.addEventListener("click", function(){ if(!phase2Unlocked) return; if(currentPhase===2){closeMenu();return;} setPhase(2); closeMenu(); });
     elBtnPhase3.addEventListener("click", function(){ if(!phase3Unlocked) return; if(currentPhase===3){closeMenu();return;} setPhase(3); closeMenu(); });
+    elBtnPhase4.addEventListener("click", function(){ if(!phase4Unlocked) return; if(currentPhase===4){closeMenu();return;} setPhase(4); closeMenu(); });
     elMenuGuideBtn.addEventListener("click", function(){ closeMenu(); elMechanicsGuide.style.display = "flex"; });
     elGuideClose.addEventListener("click", function(){ elMechanicsGuide.style.display = "none"; prepare(lastX); });
 
