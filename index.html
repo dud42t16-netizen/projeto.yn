@@ -10,7 +10,7 @@
         #game-container{position:relative;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 0%,#1a1440 0%,#0d0b1a 70%);transition:background .6s ease}
         #game-container.phase-2{background:radial-gradient(ellipse at 50% 0%,#0f2a2a 0%,#0a1a1a 70%)}
         #game-container.phase-3{background:radial-gradient(ellipse at 50% 0%,#1a0a1a 0%,#0d0610 70%)}
-        #game-container.phase-4{background:radial-gradient(ellipse at 50% 0%,#dbeafe 0%,#bfdbfe 40%,#93c5fd 100%)}
+        #game-container.phase-4{background:radial-gradient(ellipse at 50% 0%,#93c5fd 0%,#60a5fa 45%,#3b82f6 100%)}
         #gameCanvas{display:block;border-radius:16px;box-shadow:0 0 60px rgba(120,80,255,.12),inset 0 0 0 1px rgba(255,255,255,.04);touch-action:none;background:rgba(255,255,255,.02)}
         #game-container.phase-2 #gameCanvas{box-shadow:0 0 60px rgba(45,212,191,.12),inset 0 0 0 1px rgba(255,255,255,.04)}
         #game-container.phase-3 #gameCanvas{box-shadow:0 0 60px rgba(190,24,93,.15),inset 0 0 0 1px rgba(255,255,255,.04)}
@@ -429,27 +429,53 @@ class Ball {
             ctx.fill();
             ctx.globalAlpha = 1;
 
-            // Faces facetadas (triângulos)
-            const faces = 8;
-            for (let f = 0; f < faces; f++) {
-                const a1 = (f / faces) * Math.PI * 2 - 0.4;
-                const a2 = ((f + 1) / faces) * Math.PI * 2 - 0.4;
-                const mid = (a1 + a2) / 2;
+            // Faces em losango (estilo cristal facetado)
+            const diamonds = 6;
+            for (let d = 0; d < diamonds; d++) {
+                const ang = (d / diamonds) * Math.PI * 2 + 0.2;
+                const size = this.r * 0.42;
+                const dist = this.r * 0.38;
 
+                const cx = this.x + Math.cos(ang) * dist;
+                const cy = this.y + Math.sin(ang) * dist;
+
+                // Losango
                 ctx.beginPath();
-                ctx.moveTo(this.x, this.y);
-                ctx.lineTo(this.x + Math.cos(a1) * this.r * 0.92, this.y + Math.sin(a1) * this.r * 0.92);
-                ctx.lineTo(this.x + Math.cos(a2) * this.r * 0.92, this.y + Math.sin(a2) * this.r * 0.92);
+                ctx.moveTo(cx, cy - size * 0.7);
+                ctx.lineTo(cx + size * 0.55, cy);
+                ctx.lineTo(cx, cy + size * 0.7);
+                ctx.lineTo(cx - size * 0.55, cy);
                 ctx.closePath();
 
-                // Alterna brilho das faces
-                const bright = (f % 2 === 0) ? 0.22 : 0.08;
+                const bright = (d % 2 === 0) ? 0.28 : 0.12;
                 ctx.fillStyle = "rgba(255,255,255," + bright + ")";
                 ctx.fill();
 
-                // Aresta da face
-                ctx.strokeStyle = "rgba(255,255,255,0.18)";
-                ctx.lineWidth = 0.8;
+                ctx.strokeStyle = "rgba(255,255,255,0.25)";
+                ctx.lineWidth = 0.9;
+                ctx.stroke();
+            }
+
+            // Losangos menores no centro
+            for (let d = 0; d < 3; d++) {
+                const ang = (d / 3) * Math.PI * 2 + 0.5;
+                const size = this.r * 0.22;
+                const dist = this.r * 0.15;
+
+                const cx = this.x + Math.cos(ang) * dist;
+                const cy = this.y + Math.sin(ang) * dist;
+
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - size * 0.65);
+                ctx.lineTo(cx + size * 0.5, cy);
+                ctx.lineTo(cx, cy + size * 0.65);
+                ctx.lineTo(cx - size * 0.5, cy);
+                ctx.closePath();
+
+                ctx.fillStyle = "rgba(255,255,255,0.18)";
+                ctx.fill();
+                ctx.strokeStyle = "rgba(255,255,255,0.2)";
+                ctx.lineWidth = 0.7;
                 ctx.stroke();
             }
 
@@ -868,35 +894,31 @@ function spawn(x, y, color, n) {
 // GAME OVER (REFORÇADO)
 // ================================================================
 function checkLose() {
+    // Game Over bem mais sensível:
+    // qualquer bola que já tenha passado por baixo da linha
+    // e agora esteja um pouco acima dela → conta como perigo.
     let danger = false;
-    let ballsAbove = 0;
 
     for (let i = 0; i < balls.length; i++) {
         const b = balls[i];
         if (!b.alive) continue;
 
+        // Marca que a bola já desceu abaixo da linha
         if (b.y - b.r >= CONFIG.dangerLine) {
             b.passedBelowDangerLine = true;
         }
 
+        // Se voltou a ficar acima (mesmo que pouco) → perigo
         if (b.passedBelowDangerLine && b.y - b.r < CONFIG.dangerLine) {
             danger = true;
-            ballsAbove++;
-        }
-
-        // Reforço extra: bola claramente acima e quase parada
-        if (b.y - b.r < CONFIG.dangerLine - 8 && Math.abs(b.vy) < 0.8 && Math.abs(b.vx) < 0.8) {
-            if (b.passedBelowDangerLine) {
-                danger = true;
-                ballsAbove++;
-            }
+            break;
         }
     }
 
     if (danger) {
         dangerTimer++;
-        const threshold = ballsAbove >= 2 ? 32 : 42;
-        if (dangerTimer >= threshold) {
+        // Pouca tolerância: ~0.35s
+        if (dangerTimer >= 21) {
             endGame();
         }
     } else {
@@ -1090,7 +1112,7 @@ function loop() {
         shake *= 0.88;
     } else shake = 0;
 
-    if (currentPhase === 4) ctx.fillStyle = "#e0f2fe";
+    if (currentPhase === 4) ctx.fillStyle = "#bfdbfe";
     else if (currentPhase === 3) ctx.fillStyle = "#120810";
     else if (currentPhase === 2) ctx.fillStyle = "#0a1f1f";
     else ctx.fillStyle = "#0f0d1f";
