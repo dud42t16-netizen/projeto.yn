@@ -164,16 +164,16 @@
 // CONFIGURAÇÕES
 // ================================================================
 const CONFIG = {
-    gravity: 0.22,
+    gravity: 0.21,
     friction: 0.991,
-    restitution: 0.35,
+    restitution: 0.39,
     dropY: 55,
     dangerLine: 105,
     maxBalls: 55,
-    specialChance: 0.07,
-    phase2Unlock: 70000,
-    phase3Unlock: 110000,
-    phase4Unlock: 180000
+    specialChance: 0.09,
+    phase2Unlock: 50000,
+    phase3Unlock: 75000,
+    phase4Unlock: 100000
 };
 
 // ================================================================
@@ -925,23 +925,42 @@ function doPrism(a, b) {
     playPop();
 }
 
+
 function doBomb(bomb) {
+    if (!bomb || !bomb.alive) return;
+
     bomb.alive = false;
+
+    // Raio-base da explosão em pixels.
     const radius = 80;
+    const radiusSq = radius * radius;
+
     for (let i = 0; i < balls.length; i++) {
         const o = balls[i];
+
+        // Ignora bolas já removidas e a própria bomba.
         if (!o.alive || o === bomb) continue;
-        const dx = o.x - bomb.x, dy = o.y - bomb.y;
-        if (dx*dx + dy*dy < radius*radius) {
+
+        const dx = o.x - bomb.x;
+        const dy = o.y - bomb.y;
+        const distanceSq = dx * dx + dy * dy;
+
+        // Considera o raio da bola atingida, inclusive níveis maiores.
+        const effectiveRadius = radius + o.r;
+
+        if (distanceSq <= effectiveRadius * effectiveRadius) {
             o.alive = false;
             spawn(o.x, o.y, o.color, 4);
         }
     }
+
+    // Efeitos visuais e pontuação da explosão.
     spawn(bomb.x, bomb.y, "#ff3333", 11);
     shake = Math.max(shake, 7);
     addScore(40);
     playBomb();
 }
+
 
 function triggerChainGrowth(level) {
     for (let i = 0; i < balls.length; i++) {
