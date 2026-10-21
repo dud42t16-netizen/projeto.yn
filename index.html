@@ -414,114 +414,86 @@ class Ball {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
 
-        // Visual de cristal geométrico (Fase 4) - estilo facetado transparente
+        // Visual de cristal (Fase 4) - transparente + faces geométricas
         if (currentPhase === 4 && !this.special) {
-            // Base colorida semi-transparente
-            const base = ctx.createRadialGradient(
-                this.x - this.r * 0.25, this.y - this.r * 0.3, 0,
+            // Base colorida bem transparente
+            const g = ctx.createRadialGradient(
+                this.x - this.r * 0.3, this.y - this.r * 0.35, this.r * 0.05,
                 this.x, this.y, this.r
             );
-            base.addColorStop(0, lighten(this.color, 70));
-            base.addColorStop(0.4, this.color);
-            base.addColorStop(1, darken(this.color, 15));
-            ctx.fillStyle = base;
-            ctx.globalAlpha = 0.72;
+            g.addColorStop(0, lighten(this.color, 80));
+            g.addColorStop(0.35, this.color);
+            g.addColorStop(1, darken(this.color, 25));
+            ctx.fillStyle = g;
+            ctx.globalAlpha = 0.55;
             ctx.fill();
             ctx.globalAlpha = 1;
 
-            // Malha de faces geométricas (triângulos irregulares estilo cristal)
-            const segments = 10;
-            for (let i = 0; i < segments; i++) {
-                const a0 = (i / segments) * Math.PI * 2;
-                const a1 = ((i + 1) / segments) * Math.PI * 2;
-                const a2 = ((i + 0.5) / segments) * Math.PI * 2;
+            // Faces geométricas densas (estilo cristal da imagem)
+            const segs = 12;
+            for (let i = 0; i < segs; i++) {
+                const a0 = (i / segs) * Math.PI * 2 - 0.15;
+                const a1 = ((i + 1) / segs) * Math.PI * 2 - 0.15;
 
-                // Face externa
+                // Face grande
                 ctx.beginPath();
                 ctx.moveTo(this.x, this.y);
-                ctx.lineTo(
-                    this.x + Math.cos(a0) * this.r * 0.95,
-                    this.y + Math.sin(a0) * this.r * 0.95
-                );
-                ctx.lineTo(
-                    this.x + Math.cos(a1) * this.r * 0.95,
-                    this.y + Math.sin(a1) * this.r * 0.95
-                );
+                ctx.lineTo(this.x + Math.cos(a0) * this.r * 0.97, this.y + Math.sin(a0) * this.r * 0.97);
+                ctx.lineTo(this.x + Math.cos(a1) * this.r * 0.97, this.y + Math.sin(a1) * this.r * 0.97);
                 ctx.closePath();
-
-                const alpha = (i % 2 === 0) ? 0.18 : 0.07;
-                ctx.fillStyle = "rgba(255,255,255," + alpha + ")";
+                ctx.fillStyle = (i % 2 === 0) ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.05)";
                 ctx.fill();
-                ctx.strokeStyle = "rgba(255,255,255,0.22)";
-                ctx.lineWidth = 0.7;
+                ctx.strokeStyle = "rgba(255,255,255,0.2)";
+                ctx.lineWidth = 0.6;
                 ctx.stroke();
 
-                // Face interna (cria profundidade)
+                // Face média (profundidade)
+                const mid = (a0 + a1) / 2;
                 ctx.beginPath();
-                ctx.moveTo(
-                    this.x + Math.cos(a2) * this.r * 0.35,
-                    this.y + Math.sin(a2) * this.r * 0.35
-                );
-                ctx.lineTo(
-                    this.x + Math.cos(a0) * this.r * 0.7,
-                    this.y + Math.sin(a0) * this.r * 0.7
-                );
-                ctx.lineTo(
-                    this.x + Math.cos(a1) * this.r * 0.7,
-                    this.y + Math.sin(a1) * this.r * 0.7
-                );
+                ctx.moveTo(this.x + Math.cos(mid) * this.r * 0.25, this.y + Math.sin(mid) * this.r * 0.25);
+                ctx.lineTo(this.x + Math.cos(a0) * this.r * 0.65, this.y + Math.sin(a0) * this.r * 0.65);
+                ctx.lineTo(this.x + Math.cos(a1) * this.r * 0.65, this.y + Math.sin(a1) * this.r * 0.65);
                 ctx.closePath();
-                ctx.fillStyle = "rgba(255,255,255,0.08)";
+                ctx.fillStyle = "rgba(255,255,255,0.07)";
                 ctx.fill();
-                ctx.strokeStyle = "rgba(255,255,255,0.15)";
+                ctx.strokeStyle = "rgba(255,255,255,0.12)";
                 ctx.lineWidth = 0.5;
                 ctx.stroke();
             }
 
-            // Anel externo de vidro
+            // Anel de vidro externo
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.r - 0.5, 0, Math.PI * 2);
-            ctx.strokeStyle = "rgba(255,255,255,0.55)";
-            ctx.lineWidth = 1.6;
+            ctx.strokeStyle = "rgba(255,255,255,0.5)";
+            ctx.lineWidth = 1.5;
             ctx.stroke();
 
-            // Contorno fino
+            // Contorno
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-            ctx.strokeStyle = "rgba(255,255,255,0.25)";
+            ctx.strokeStyle = "rgba(255,255,255,0.2)";
             ctx.lineWidth = 1;
             ctx.stroke();
 
-            // Reflexo principal (brilho de cristal)
+            // Brilho forte (reflexo de cristal)
             ctx.beginPath();
             ctx.ellipse(
-                this.x - this.r * 0.28,
-                this.y - this.r * 0.35,
-                this.r * 0.3,
-                this.r * 0.16,
-                -0.5,
-                0,
-                Math.PI * 2
+                this.x - this.r * 0.3, this.y - this.r * 0.38,
+                this.r * 0.28, this.r * 0.14, -0.55, 0, Math.PI * 2
             );
-            ctx.fillStyle = "rgba(255,255,255,0.7)";
+            ctx.fillStyle = "rgba(255,255,255,0.75)";
             ctx.fill();
 
-            // Reflexo secundário menor
+            // Brilho menor
             ctx.beginPath();
-            ctx.arc(
-                this.x + this.r * 0.22,
-                this.y + this.r * 0.25,
-                this.r * 0.09,
-                0,
-                Math.PI * 2
-            );
+            ctx.arc(this.x + this.r * 0.2, this.y + this.r * 0.22, this.r * 0.08, 0, Math.PI * 2);
             ctx.fillStyle = "rgba(255,255,255,0.35)";
             ctx.fill();
 
             return;
         }
 
-        if (this.special === "rainbow") {
+        if (this.special === "rainbow")        if (this.special === "rainbow") {
             const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
             g.addColorStop(0,"#FF6B6B"); g.addColorStop(0.2,"#FECA57"); g.addColorStop(0.4,"#1DD1A1");
             g.addColorStop(0.6,"#54A0FF"); g.addColorStop(0.8,"#5F27CD"); g.addColorStop(1,"#FF9FF3");
@@ -900,10 +872,9 @@ function spawn(x, y, color, n) {
 // ================================================================
 function checkLose() {
     // ================================================================
-    // GAME OVER - versão limpa e profissional
-    // Regra: se a parte de cima de qualquer bola estiver
-    // acima da linha vermelha E a bola não estiver caindo rápido,
-    // conta como perigo. Se o perigo durar ~0.5s → Game Over.
+    // GAME OVER - corrigido para bolas grandes
+    // Só conta se a bola JÁ desceu abaixo da linha alguma vez
+    // e depois ficou estabilizada acima dela.
     // ================================================================
     let danger = false;
 
@@ -911,22 +882,24 @@ function checkLose() {
         const b = balls[i];
         if (!b.alive) continue;
 
-        const top = b.y - b.r;
+        // Marca que a bola já passou por baixo da linha
+        if (b.y - b.r >= CONFIG.dangerLine) {
+            b.passedBelowDangerLine = true;
+        }
 
-        // Bola está acima da linha de perigo
-        if (top < CONFIG.dangerLine) {
-            // Só conta se não estiver caindo rápido (já estabilizou)
-            if (b.vy > -2.0) {
-                danger = true;
-                break;
-            }
+        // Só considera perigo se:
+        // 1. Já passou por baixo da linha antes
+        // 2. Agora está acima da linha
+        // 3. Não está caindo rápido (já estabilizou)
+        if (b.passedBelowDangerLine && (b.y - b.r) < CONFIG.dangerLine && b.vy > -1.5) {
+            danger = true;
+            break;
         }
     }
 
     if (danger) {
         dangerTimer++;
-        // ~0.5 segundo de tolerância
-        if (dangerTimer >= 30) {
+        if (dangerTimer >= 28) {
             endGame();
         }
     } else {
