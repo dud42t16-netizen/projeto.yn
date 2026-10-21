@@ -734,6 +734,27 @@ function prepare(x) {
 function drop() {
     if (!current || !canDrop || gameOver) return;
     unlockAudio();
+
+    // Se a posição de lançamento já estiver ocupada, a nova bola não tem
+    // espaço real para entrar no campo. Encerra antes de adicioná-la à física.
+    // A bola de prévia (current) é excluída da verificação por estar fora de balls.
+    const launchX = current.x;
+    const launchY = current.y;
+    const launchR = current.r;
+    const launchBlocked = balls.some(function(ball) {
+        if (!ball.alive) return false;
+        const dx = ball.x - launchX;
+        const dy = ball.y - launchY;
+        const minDistance = ball.r + launchR;
+        // Pequena tolerância evita Game Over por contato tangencial impreciso.
+        return (dx * dx + dy * dy) < Math.pow(minDistance - 2, 2);
+    });
+
+    if (launchBlocked) {
+        endGame();
+        return;
+    }
+
     canDrop = false;
     balls.push(current);
     current = null;
