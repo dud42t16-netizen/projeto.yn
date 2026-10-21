@@ -414,104 +414,109 @@ class Ball {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
 
-        // Visual de cristal facetado (Fase 4)
+        // Visual de cristal geométrico (Fase 4) - estilo facetado transparente
         if (currentPhase === 4 && !this.special) {
-            // Base semi-transparente
+            // Base colorida semi-transparente
             const base = ctx.createRadialGradient(
-                this.x - this.r * 0.3, this.y - this.r * 0.3, 0,
+                this.x - this.r * 0.25, this.y - this.r * 0.3, 0,
                 this.x, this.y, this.r
             );
-            base.addColorStop(0, lighten(this.color, 60));
-            base.addColorStop(0.5, this.color);
-            base.addColorStop(1, darken(this.color, 20));
+            base.addColorStop(0, lighten(this.color, 70));
+            base.addColorStop(0.4, this.color);
+            base.addColorStop(1, darken(this.color, 15));
             ctx.fillStyle = base;
-            ctx.globalAlpha = 0.82;
+            ctx.globalAlpha = 0.72;
             ctx.fill();
             ctx.globalAlpha = 1;
 
-            // Faces em losango (estilo cristal facetado)
-            const diamonds = 6;
-            for (let d = 0; d < diamonds; d++) {
-                const ang = (d / diamonds) * Math.PI * 2 + 0.2;
-                const size = this.r * 0.42;
-                const dist = this.r * 0.38;
+            // Malha de faces geométricas (triângulos irregulares estilo cristal)
+            const segments = 10;
+            for (let i = 0; i < segments; i++) {
+                const a0 = (i / segments) * Math.PI * 2;
+                const a1 = ((i + 1) / segments) * Math.PI * 2;
+                const a2 = ((i + 0.5) / segments) * Math.PI * 2;
 
-                const cx = this.x + Math.cos(ang) * dist;
-                const cy = this.y + Math.sin(ang) * dist;
-
-                // Losango
+                // Face externa
                 ctx.beginPath();
-                ctx.moveTo(cx, cy - size * 0.7);
-                ctx.lineTo(cx + size * 0.55, cy);
-                ctx.lineTo(cx, cy + size * 0.7);
-                ctx.lineTo(cx - size * 0.55, cy);
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(
+                    this.x + Math.cos(a0) * this.r * 0.95,
+                    this.y + Math.sin(a0) * this.r * 0.95
+                );
+                ctx.lineTo(
+                    this.x + Math.cos(a1) * this.r * 0.95,
+                    this.y + Math.sin(a1) * this.r * 0.95
+                );
                 ctx.closePath();
 
-                const bright = (d % 2 === 0) ? 0.28 : 0.12;
-                ctx.fillStyle = "rgba(255,255,255," + bright + ")";
+                const alpha = (i % 2 === 0) ? 0.18 : 0.07;
+                ctx.fillStyle = "rgba(255,255,255," + alpha + ")";
                 ctx.fill();
-
-                ctx.strokeStyle = "rgba(255,255,255,0.25)";
-                ctx.lineWidth = 0.9;
-                ctx.stroke();
-            }
-
-            // Losangos menores no centro
-            for (let d = 0; d < 3; d++) {
-                const ang = (d / 3) * Math.PI * 2 + 0.5;
-                const size = this.r * 0.22;
-                const dist = this.r * 0.15;
-
-                const cx = this.x + Math.cos(ang) * dist;
-                const cy = this.y + Math.sin(ang) * dist;
-
-                ctx.beginPath();
-                ctx.moveTo(cx, cy - size * 0.65);
-                ctx.lineTo(cx + size * 0.5, cy);
-                ctx.lineTo(cx, cy + size * 0.65);
-                ctx.lineTo(cx - size * 0.5, cy);
-                ctx.closePath();
-
-                ctx.fillStyle = "rgba(255,255,255,0.18)";
-                ctx.fill();
-                ctx.strokeStyle = "rgba(255,255,255,0.2)";
+                ctx.strokeStyle = "rgba(255,255,255,0.22)";
                 ctx.lineWidth = 0.7;
                 ctx.stroke();
+
+                // Face interna (cria profundidade)
+                ctx.beginPath();
+                ctx.moveTo(
+                    this.x + Math.cos(a2) * this.r * 0.35,
+                    this.y + Math.sin(a2) * this.r * 0.35
+                );
+                ctx.lineTo(
+                    this.x + Math.cos(a0) * this.r * 0.7,
+                    this.y + Math.sin(a0) * this.r * 0.7
+                );
+                ctx.lineTo(
+                    this.x + Math.cos(a1) * this.r * 0.7,
+                    this.y + Math.sin(a1) * this.r * 0.7
+                );
+                ctx.closePath();
+                ctx.fillStyle = "rgba(255,255,255,0.08)";
+                ctx.fill();
+                ctx.strokeStyle = "rgba(255,255,255,0.15)";
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
             }
 
-            // Anel externo de cristal
+            // Anel externo de vidro
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.r - 0.8, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y, this.r - 0.5, 0, Math.PI * 2);
             ctx.strokeStyle = "rgba(255,255,255,0.55)";
-            ctx.lineWidth = 1.8;
+            ctx.lineWidth = 1.6;
             ctx.stroke();
 
-            // Reflexo principal forte
+            // Contorno fino
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(255,255,255,0.25)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Reflexo principal (brilho de cristal)
             ctx.beginPath();
             ctx.ellipse(
-                this.x - this.r * 0.3,
+                this.x - this.r * 0.28,
                 this.y - this.r * 0.35,
-                this.r * 0.32,
-                this.r * 0.18,
+                this.r * 0.3,
+                this.r * 0.16,
                 -0.5,
                 0,
                 Math.PI * 2
             );
-            ctx.fillStyle = "rgba(255,255,255,0.65)";
+            ctx.fillStyle = "rgba(255,255,255,0.7)";
             ctx.fill();
 
-            // Reflexo secundário
+            // Reflexo secundário menor
             ctx.beginPath();
-            ctx.arc(this.x + this.r * 0.25, this.y + this.r * 0.28, this.r * 0.1, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(255,255,255,0.3)";
+            ctx.arc(
+                this.x + this.r * 0.22,
+                this.y + this.r * 0.25,
+                this.r * 0.09,
+                0,
+                Math.PI * 2
+            );
+            ctx.fillStyle = "rgba(255,255,255,0.35)";
             ctx.fill();
-
-            // Leve arco-íris na borda
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.r - 1.5, 0, Math.PI * 2);
-            ctx.strokeStyle = "rgba(180,220,255,0.25)";
-            ctx.lineWidth = 2;
-            ctx.stroke();
 
             return;
         }
@@ -894,31 +899,34 @@ function spawn(x, y, color, n) {
 // GAME OVER (REFORÇADO)
 // ================================================================
 function checkLose() {
-    // Game Over bem mais sensível:
-    // qualquer bola que já tenha passado por baixo da linha
-    // e agora esteja um pouco acima dela → conta como perigo.
+    // ================================================================
+    // GAME OVER - versão limpa e profissional
+    // Regra: se a parte de cima de qualquer bola estiver
+    // acima da linha vermelha E a bola não estiver caindo rápido,
+    // conta como perigo. Se o perigo durar ~0.5s → Game Over.
+    // ================================================================
     let danger = false;
 
     for (let i = 0; i < balls.length; i++) {
         const b = balls[i];
         if (!b.alive) continue;
 
-        // Marca que a bola já desceu abaixo da linha
-        if (b.y - b.r >= CONFIG.dangerLine) {
-            b.passedBelowDangerLine = true;
-        }
+        const top = b.y - b.r;
 
-        // Se voltou a ficar acima (mesmo que pouco) → perigo
-        if (b.passedBelowDangerLine && b.y - b.r < CONFIG.dangerLine) {
-            danger = true;
-            break;
+        // Bola está acima da linha de perigo
+        if (top < CONFIG.dangerLine) {
+            // Só conta se não estiver caindo rápido (já estabilizou)
+            if (b.vy > -2.0) {
+                danger = true;
+                break;
+            }
         }
     }
 
     if (danger) {
         dangerTimer++;
-        // Pouca tolerância: ~0.35s
-        if (dangerTimer >= 21) {
+        // ~0.5 segundo de tolerância
+        if (dangerTimer >= 30) {
             endGame();
         }
     } else {
