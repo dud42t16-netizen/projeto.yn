@@ -752,7 +752,20 @@ function drop() {
 // ================================================================
 function physics() {
     if (balls.length > CONFIG.maxBalls) balls.length = CONFIG.maxBalls;
+
+    // Guarda a posição anterior ANTES de qualquer movimento ou colisão.
+    // Assim o teste não perde cruzamentos causados por empurrões da física.
+    const previousTops = new Map();
+    for (const ball of balls) {
+        if (ball.alive) previousTops.set(ball, ball.y - ball.r);
+    }
+
     for (let i = 0; i < balls.length; i++) balls[i].update();
+
+    // Detecta cruzamentos causados pelo movimento normal antes que fusões
+    // possam remover a bola da lista.
+    checkLose(previousTops);
+    if (gameOver) return;
 
     let mergedThisFrame = false;
     for (let i = 0; i < balls.length; i++) {
@@ -774,6 +787,11 @@ function physics() {
             a.y -= ny * overlap * (b.r/total);
             b.x += nx * overlap * (a.r/total);
             b.y += ny * overlap * (a.r/total);
+
+            // A separação de colisão também pode empurrar uma bola para cima
+            // da linha; verifica aqui, antes de uma fusão poder removê-la.
+            checkLose(previousTops);
+            if (gameOver) return;
 
             const dvx = a.vx - b.vx, dvy = a.vy - b.vy;
             const imp = (dvx*nx + dvy*ny) * CONFIG.restitution;
@@ -933,30 +951,22 @@ function spawn(x, y, color, n) {
 }
 
 // ================================================================
-// GAME OVER (REFORÇADO)
+// GAME OVER — DETECÇÃO CONSISTENTE DE CRUZAMENTO
 // ================================================================
-function checkLose() {
-    if (gameOver) return;
+function checkLose(previousTops) {
+    if (gameOver || !previousTops) return;
 
     const lineY = CONFIG.dangerLine;
 
     for (const ball of balls) {
-        if (!ball.alive) continue;
+        if (!ball.alive || !previousTops.has(ball)) continue;
 
+        const previousTop = previousTops.get(ball);
         const currentTop = ball.y - ball.r;
 
-        // A primeira leitura só cria a referência; não pune bolas recém-criadas.
-        if (!Number.isFinite(ball._previousTopForGameOver)) {
-            ball._previousTopForGameOver = currentTop;
-            continue;
-        }
-
-        const previousTop = ball._previousTopForGameOver;
-        ball._previousTopForGameOver = currentTop;
-
-        // Só perde quando a bola cruza a linha de baixo para cima.
-        // Bolas que caem atravessam no sentido contrário e são ignoradas.
-        // Comparar os dois frames também captura cruzamentos rápidos.
+        // Só termina quando a parte superior da bola cruza a linha
+        // de baixo para cima. Uma bola caindo cruza no sentido oposto,
+        // portanto não provoca Game Over.
         if (previousTop >= lineY && currentTop < lineY) {
             endGame();
             return;
@@ -1157,7 +1167,7 @@ function loop() {
     ctx.fillRect(0, 0, W, H);
 
     drawDanger();
-    if (!gameOver) { physics(); checkLose(); updateCombo(); }
+    if (!gameOver) { physics(); updateCombo(); }
     for (let i = 0; i < balls.length; i++) balls[i].draw();
     if (current) current.draw();
     for (let i = particles.length - 1; i >= 0; i--) {
