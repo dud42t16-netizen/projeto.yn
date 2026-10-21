@@ -817,7 +817,26 @@ function physics() {
             }
         }
     }
+    // Verifica também as bolas que surgiram durante fusões neste quadro.
+    checkLose(previousTops);
+    if (gameOver) return;
+
     balls = balls.filter(function(b){ return b.alive; });
+}
+
+// ================================================================
+// GAME OVER — HERANÇA DO ESTADO NAS FUSÕES
+// ================================================================
+function inheritDangerState(newBall, ...parents) {
+    // Uma bola criada por fusão herda o histórico dos pais. Isso impede
+    // que o aumento de raio durante um merge esconda a subida pela linha.
+    newBall.passedBelowDangerLine = parents.some(function(parent) {
+        return parent && (
+            parent.passedBelowDangerLine ||
+            (parent.y - parent.r >= CONFIG.dangerLine)
+        );
+    });
+    return newBall;
 }
 
 // ================================================================
@@ -828,7 +847,7 @@ function doNormal(a, b) {
     const lvl = a.level + 1;
     const nx = (a.x + b.x)/2, ny = (a.y + b.y)/2;
     if (lvl > highestLevelReached) highestLevelReached = lvl;
-    const neu = new Ball(nx, ny, lvl, null);
+    const neu = inheritDangerState(new Ball(nx, ny, lvl, null), a, b);
     neu.vx = (a.vx + b.vx)*0.2; neu.vy = (a.vy + b.vy)*0.2 - 1;
     balls.push(neu);
     addScore(LEVELS[lvl].score);
@@ -844,7 +863,7 @@ function doRainbow(a, b) {
     const lvl = Math.min(normal.level + 1, LEVELS.length - 1);
     const nx = (a.x + b.x)/2, ny = (a.y + b.y)/2;
     if (lvl > highestLevelReached) highestLevelReached = lvl;
-    const neu = new Ball(nx, ny, lvl, null);
+    const neu = inheritDangerState(new Ball(nx, ny, lvl, null), a, b);
     neu.vx = (a.vx + b.vx)*0.2; neu.vy = (a.vy + b.vy)*0.2 - 1;
     balls.push(neu);
     addScore(LEVELS[lvl].score * 2);
@@ -859,8 +878,8 @@ function doMirror(a, b) {
     mirror.alive = false; other.alive = false;
     const lvl = other.level;
     const nx = (a.x + b.x)/2, ny = (a.y + b.y)/2;
-    const b1 = new Ball(nx - 10, ny, lvl, null);
-    const b2 = new Ball(nx + 10, ny, lvl, null);
+    const b1 = inheritDangerState(new Ball(nx - 10, ny, lvl, null), mirror, other);
+    const b2 = inheritDangerState(new Ball(nx + 10, ny, lvl, null), mirror, other);
     b1.vx = -1; b2.vx = 1;
     balls.push(b1); balls.push(b2);
     addScore(LEVELS[lvl].score);
@@ -951,25 +970,42 @@ function spawn(x, y, color, n) {
 }
 
 // ================================================================
-// GAME OVER — DETECÇÃO CONSISTENTE DE CRUZAMENTO
+// GAME OVER — HISTÓRICO PERSISTENTE, INCLUSIVE APÓS FUSÕES
 // ================================================================
 function checkLose(previousTops) {
-    if (gameOver || !previousTops) return;
+    if (gameOver) return;
 
     const lineY = CONFIG.dangerLine;
 
     for (const ball of balls) {
-        if (!ball.alive || !previousTops.has(ball)) continue;
+        if (!ball.alive) continue;
 
-        const previousTop = previousTops.get(ball);
         const currentTop = ball.y - ball.r;
 
-        // Só termina quando a parte superior da bola cruza a linha
-        // de baixo para cima. Uma bola caindo cruza no sentido oposto,
-        // portanto não provoca Game Over.
-        if (previousTop >= lineY && currentTop < lineY) {
+        // A bola só fica elegível depois de descer até que seu topo
+        // esteja na linha ou abaixo dela. Isso não penaliza a queda inicial.
+        if (currentTop >= lineY) {
+            ball.passedBelowDangerLine = true;
+            continue;
+        }
+
+        // Se uma bola elegível está acima da linha, ela voltou a cruzá-la.
+        // A regra também cobre mudanças de raio por fusão/crescimento, mesmo
+        // quando o centro da bola quase não se moveu neste quadro.
+        if (ball.passedBelowDangerLine) {
             endGame();
             return;
+        }
+
+        // Segurança adicional para cruzamentos rápidos entre dois quadros.
+        // O estado persistente é a regra principal; esta condição cobre
+        // bolas existentes cujo histórico ainda não foi marcado.
+        if (previousTops && previousTops.has(ball)) {
+            const previousTop = previousTops.get(ball);
+            if (previousTop >= lineY && currentTop < lineY) {
+                endGame();
+                return;
+            }
         }
     }
 }
