@@ -169,7 +169,9 @@ const CONFIG = {
     restitution: 0.39,
     dropY: 55,
     dangerLine: 105,
-    maxBalls: 55,
+    dangerFrames: 150,
+    graceFrames: 60,
+    dangerDecay: 2,
     specialChance: 0.09,
     phase2Unlock: 50000,
     phase3Unlock: 75000,
@@ -311,6 +313,11 @@ let current = null, canDrop = true, gameOver = false;
 let shake = 0, lastX = 0, highestLevelReached = 0, dangerTimer = 0;
 let combo = 0, comboTimer = 0, multiplier = 1;
 
+// Controle do fim de jogo e do passo fixo da simulação.
+let gameOverTimeout = null;
+let lastTime = 0, accumulator = 0;
+const STEP_MS = 1000 / 60;
+
 // ================================================================
 // UI
 // ================================================================
@@ -372,8 +379,8 @@ class Ball {
         this.vx = 0;
         this.vy = 0;
         this.alive = true;
-        this.passedBelowDangerLine = false;
-        this._previousTopForGameOver = null;
+        this.grace = CONFIG.graceFrames;
+        this.overFrames = 0;
         this.id = Math.random().toString(36).slice(2);
 
         if (this.special === "rainbow") {
@@ -494,9 +501,11 @@ class Particle {
         this.decay = 0.03 + Math.random() * 0.02;
         this.size = 2 + Math.random() * 2.5;
     }
+
     update() {
         this.x += this.vx; this.y += this.vy; this.vy += 0.07; this.life -= this.decay;
     }
+
     draw() {
         if (this.life <= 0) return;
         ctx.globalAlpha = this.life;
@@ -518,6 +527,7 @@ function lighten(hex, amt) {
     const b = Math.min(255, (n & 255) + amt);
     return "rgb("+r+","+g+","+b+")";
 }
+
 function darken(hex, amt) {
     const n = parseInt(hex.slice(1), 16);
     const r = Math.max(0, (n >> 16) - amt);
@@ -735,23 +745,11 @@ function drop() {
     if (!current || !canDrop || gameOver) return;
     unlockAudio();
 
-    // Se a posição de lançamento já estiver ocupada, a nova bola não tem
-    // espaço real para entrar no campo. Encerra antes de adicioná-la à física.
-    // A bola de prévia (current) é excluída da verificação por estar fora de balls.
-    const launchX = current.x;
-    const launchY = current.y;
-    const launchR = current.r;
-    const launchBlocked = balls.some(function(ball) {
-        if (!ball.alive) return false;
-        const dx = ball.x - launchX;
-        const dy = ball.y - launchY;
-        const minDistance = ball.r + launchR;
-        // Pequena tolerância evita Game Over por contato tangencial impreciso.
-        return (dx * dx + dy * dy) < Math.pow(minDistance - 2, 2);
-    });
-
-    if (launchBlocked) {
-        endGame();
+    // Posição de lançamento ocupada: o clique é ignorado e a bola de prévia
+    // fica translúcida. O jogo só termina se não existir nenhuma posição livre.
+    if (isSpawnBlocked(current)) {
+        if (!hasFreeSpawnPosition(current)) endGame();
+        else shake = Math.max(shake, 2);
         return;
     }
 
@@ -772,21 +770,7 @@ function drop() {
 // FÍSICA
 // ================================================================
 function physics() {
-    if (balls.length > CONFIG.maxBalls) balls.length = CONFIG.maxBalls;
-
-    // Guarda a posição anterior ANTES de qualquer movimento ou colisão.
-    // Assim o teste não perde cruzamentos causados por empurrões da física.
-    const previousTops = new Map();
-    for (const ball of balls) {
-        if (ball.alive) previousTops.set(ball, ball.y - ball.r);
-    }
-
     for (let i = 0; i < balls.length; i++) balls[i].update();
-
-    // Detecta cruzamentos causados pelo movimento normal antes que fusões
-    // possam remover a bola da lista.
-    checkLose(previousTops);
-    if (gameOver) return;
 
     let mergedThisFrame = false;
     for (let i = 0; i < balls.length; i++) {
@@ -808,11 +792,6 @@ function physics() {
             a.y -= ny * overlap * (b.r/total);
             b.x += nx * overlap * (a.r/total);
             b.y += ny * overlap * (a.r/total);
-
-            // A separação de colisão também pode empurrar uma bola para cima
-            // da linha; verifica aqui, antes de uma fusão poder removê-la.
-            checkLose(previousTops);
-            if (gameOver) return;
 
             const dvx = a.vx - b.vx, dvy = a.vy - b.vy;
             const imp = (dvx*nx + dvy*ny) * CONFIG.restitution;
@@ -838,26 +817,9 @@ function physics() {
             }
         }
     }
-    // Verifica também as bolas que surgiram durante fusões neste quadro.
-    checkLose(previousTops);
-    if (gameOver) return;
 
     balls = balls.filter(function(b){ return b.alive; });
-}
-
-// ================================================================
-// GAME OVER — HERANÇA DO ESTADO NAS FUSÕES
-// ================================================================
-function inheritDangerState(newBall, ...parents) {
-    // Uma bola criada por fusão herda o histórico dos pais. Isso impede
-    // que o aumento de raio durante um merge esconda a subida pela linha.
-    newBall.passedBelowDangerLine = parents.some(function(parent) {
-        return parent && (
-            parent.passedBelowDangerLine ||
-            (parent.y - parent.r >= CONFIG.dangerLine)
-        );
-    });
-    return newBall;
+    updateDanger();
 }
 
 // ================================================================
@@ -868,7 +830,7 @@ function doNormal(a, b) {
     const lvl = a.level + 1;
     const nx = (a.x + b.x)/2, ny = (a.y + b.y)/2;
     if (lvl > highestLevelReached) highestLevelReached = lvl;
-    const neu = inheritDangerState(new Ball(nx, ny, lvl, null), a, b);
+    const neu = new Ball(nx, ny, lvl, null);
     neu.vx = (a.vx + b.vx)*0.2; neu.vy = (a.vy + b.vy)*0.2 - 1;
     balls.push(neu);
     addScore(LEVELS[lvl].score);
@@ -884,7 +846,7 @@ function doRainbow(a, b) {
     const lvl = Math.min(normal.level + 1, LEVELS.length - 1);
     const nx = (a.x + b.x)/2, ny = (a.y + b.y)/2;
     if (lvl > highestLevelReached) highestLevelReached = lvl;
-    const neu = inheritDangerState(new Ball(nx, ny, lvl, null), a, b);
+    const neu = new Ball(nx, ny, lvl, null);
     neu.vx = (a.vx + b.vx)*0.2; neu.vy = (a.vy + b.vy)*0.2 - 1;
     balls.push(neu);
     addScore(LEVELS[lvl].score * 2);
@@ -899,8 +861,8 @@ function doMirror(a, b) {
     mirror.alive = false; other.alive = false;
     const lvl = other.level;
     const nx = (a.x + b.x)/2, ny = (a.y + b.y)/2;
-    const b1 = inheritDangerState(new Ball(nx - 10, ny, lvl, null), mirror, other);
-    const b2 = inheritDangerState(new Ball(nx + 10, ny, lvl, null), mirror, other);
+    const b1 = new Ball(nx - 10, ny, lvl, null);
+    const b2 = new Ball(nx + 10, ny, lvl, null);
     b1.vx = -1; b2.vx = 1;
     balls.push(b1); balls.push(b2);
     addScore(LEVELS[lvl].score);
@@ -924,7 +886,6 @@ function doPrism(a, b) {
     shake = Math.max(shake, 5);
     playPop();
 }
-
 
 function doBomb(bomb) {
     if (!bomb || !bomb.alive) return;
@@ -961,7 +922,6 @@ function doBomb(bomb) {
     playBomb();
 }
 
-
 function triggerChainGrowth(level) {
     for (let i = 0; i < balls.length; i++) {
         const b = balls[i];
@@ -970,6 +930,7 @@ function triggerChainGrowth(level) {
             b.level += 1;
             b.r = LEVELS[b.level].radius;
             b.color = LEVELS[b.level].color;
+            b.grace = CONFIG.graceFrames;
             spawn(b.x, b.y, b.color, 4);
         }
     }
@@ -1010,44 +971,60 @@ function spawn(x, y, color, n) {
 }
 
 // ================================================================
-// GAME OVER — HISTÓRICO PERSISTENTE, INCLUSIVE APÓS FUSÕES
+// GAME OVER — TEMPO ACIMA DA LINHA DE PERIGO
 // ================================================================
-function checkLose(previousTops) {
-    if (gameOver) return;
+function updateDanger() {
+    let worst = 0;
 
-    const lineY = CONFIG.dangerLine;
+    for (let i = 0; i < balls.length; i++) {
+        const ball = balls[i];
 
-    for (const ball of balls) {
-        if (!ball.alive) continue;
-
-        const currentTop = ball.y - ball.r;
-
-        // A bola só fica elegível depois de descer até que seu topo
-        // esteja na linha ou abaixo dela. Isso não penaliza a queda inicial.
-        if (currentTop >= lineY) {
-            ball.passedBelowDangerLine = true;
+        // Bolas novas (drop, fusão, crescimento) ficam imunes por um instante.
+        if (ball.grace > 0) {
+            ball.grace--;
+            ball.overFrames = 0;
             continue;
         }
 
-        // Se uma bola elegível está acima da linha, ela voltou a cruzá-la.
-        // A regra também cobre mudanças de raio por fusão/crescimento, mesmo
-        // quando o centro da bola quase não se moveu neste quadro.
-        if (ball.passedBelowDangerLine) {
-            endGame();
-            return;
+        // Acumula enquanto o topo está acima da linha e recupera mais rápido
+        // quando a bola sai, o que evita reinício por tremores na borda.
+        if (ball.y - ball.r < CONFIG.dangerLine) {
+            ball.overFrames++;
+        } else {
+            ball.overFrames = Math.max(0, ball.overFrames - CONFIG.dangerDecay);
         }
 
-        // Segurança adicional para cruzamentos rápidos entre dois quadros.
-        // O estado persistente é a regra principal; esta condição cobre
-        // bolas existentes cujo histórico ainda não foi marcado.
-        if (previousTops && previousTops.has(ball)) {
-            const previousTop = previousTops.get(ball);
-            if (previousTop >= lineY && currentTop < lineY) {
-                endGame();
-                return;
-            }
-        }
+        if (ball.overFrames > worst) worst = ball.overFrames;
     }
+
+    dangerTimer = worst;
+    if (dangerTimer >= CONFIG.dangerFrames) endGame();
+}
+
+function isSpawnBlocked(ball) {
+    for (let i = 0; i < balls.length; i++) {
+        const o = balls[i];
+        if (!o.alive) continue;
+
+        const dx = o.x - ball.x;
+        const dy = o.y - ball.y;
+
+        // Pequena tolerância evita bloqueio por contato tangencial impreciso.
+        const minDistance = o.r + ball.r - 2;
+
+        if (dx * dx + dy * dy < minDistance * minDistance) return true;
+    }
+    return false;
+}
+
+function hasFreeSpawnPosition(template) {
+    const probe = { x: 0, y: CONFIG.dropY, r: template.r };
+
+    for (let x = template.r + 2; x <= W - template.r - 2; x += 6) {
+        probe.x = x;
+        if (!isSpawnBlocked(probe)) return true;
+    }
+    return false;
 }
 
 function endGame() {
@@ -1083,8 +1060,13 @@ function endGame() {
                                  currentPhase === 3 ? highScore3 : highScore4;
     elRecord.textContent = elFinalRecord.textContent;
     elNewRecord.style.display = isNew ? "block" : "none";
-    elGameOver.style.display = "flex";
     elHint.style.display = "none";
+    shake = 10;
+
+    // Atraso curto para o jogador ver o que causou o fim de jogo.
+    gameOverTimeout = setTimeout(function() {
+        if (gameOver) elGameOver.style.display = "flex";
+    }, 900);
 }
 
 // ================================================================
@@ -1118,6 +1100,7 @@ function setPhase(phase) {
 }
 
 function restartGameOnly() {
+    clearTimeout(gameOverTimeout);
     balls = []; particles = []; score = 0; gameOver = false; canDrop = true; current = null;
     combo = 0; multiplier = 1; comboTimer = 0; shake = 0; highestLevelReached = 0; dangerTimer = 0;
     elScore.textContent = "0"; elCombo.classList.remove("show");
@@ -1137,21 +1120,21 @@ function checkUnlocks() {
         phase2Unlocked = true; localStorage.setItem("sc_unlocked_2", "1");
         unlockShown2 = true; pendingUnlockPhase = 2;
         elUnlockTitle.textContent = "Fase 2 Desbloqueada!";
-        elUnlockText.textContent = "Parabéns! Você alcançou 70.000 pontos e liberou a segunda fase.";
+        elUnlockText.textContent = "Parabéns! Você alcançou " + CONFIG.phase2Unlock.toLocaleString("pt-BR") + " pontos e liberou a segunda fase.";
         elUnlockScreen.style.display = "flex"; updateMenuButtons();
     }
     if (!phase3Unlocked && !unlockShown3 && currentPhase === 2 && score >= CONFIG.phase3Unlock) {
         phase3Unlocked = true; localStorage.setItem("sc_unlocked_3", "1");
         unlockShown3 = true; pendingUnlockPhase = 3;
         elUnlockTitle.textContent = "Fase 3 Desbloqueada!";
-        elUnlockText.textContent = "Parabéns! Você alcançou 110.000 pontos e liberou a terceira fase.";
+        elUnlockText.textContent = "Parabéns! Você alcançou " + CONFIG.phase3Unlock.toLocaleString("pt-BR") + " pontos e liberou a terceira fase.";
         elUnlockScreen.style.display = "flex"; updateMenuButtons();
     }
     if (!phase4Unlocked && !unlockShown4 && currentPhase === 3 && score >= CONFIG.phase4Unlock) {
         phase4Unlocked = true; localStorage.setItem("sc_unlocked_4", "1");
         unlockShown4 = true; pendingUnlockPhase = 4;
         elUnlockTitle.textContent = "Fase 4 Desbloqueada!";
-        elUnlockText.textContent = "Parabéns! Você alcançou 180.000 pontos e liberou a quarta fase.";
+        elUnlockText.textContent = "Parabéns! Você alcançou " + CONFIG.phase4Unlock.toLocaleString("pt-BR") + " pontos e liberou a quarta fase.";
         elUnlockScreen.style.display = "flex"; updateMenuButtons();
     }
 }
@@ -1209,17 +1192,26 @@ function updateMenuButtons() {
 // DESENHO / LOOP
 // ================================================================
 function drawDanger() {
+    const ratio = Math.min(1, dangerTimer / CONFIG.dangerFrames);
+
     let near = false;
     for (let i = 0; i < balls.length; i++) {
         if (balls[i].y - balls[i].r < CONFIG.dangerLine + 45) { near = true; break; }
     }
+
     ctx.beginPath();
     ctx.setLineDash([5, 5]);
     ctx.moveTo(0, CONFIG.dangerLine);
     ctx.lineTo(W, CONFIG.dangerLine);
-    if (near) {
-        const p = 0.4 + Math.sin(Date.now()/140)*0.25;
-        ctx.strokeStyle = "rgba(255,55,55,"+p+")";
+
+    if (ratio > 0) {
+        // Pisca mais rápido conforme o tempo se esgota.
+        const p = 0.65 + Math.sin(Date.now() / (90 - ratio * 60)) * 0.3;
+        ctx.strokeStyle = "rgba(255,55,55," + p + ")";
+        ctx.lineWidth = 2.5 + ratio * 2;
+    } else if (near) {
+        const p = 0.4 + Math.sin(Date.now() / 140) * 0.25;
+        ctx.strokeStyle = "rgba(255,55,55," + p + ")";
         ctx.lineWidth = 2.5;
     } else {
         ctx.strokeStyle = "rgba(255,70,70,0.28)";
@@ -1227,9 +1219,46 @@ function drawDanger() {
     }
     ctx.stroke();
     ctx.setLineDash([]);
+
+    if (ratio > 0) {
+        // Barra de progresso e contagem regressiva.
+        ctx.fillStyle = "rgba(255,55,55,0.85)";
+        ctx.fillRect(0, CONFIG.dangerLine - 3, W * ratio, 3);
+
+        const secs = Math.max(0, (CONFIG.dangerFrames - dangerTimer) / 60);
+        ctx.save();
+        ctx.font = "700 13px 'Segoe UI', system-ui, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#ff3b3b";
+        ctx.fillText(secs.toFixed(1) + "s", W - 8, CONFIG.dangerLine - 10);
+        ctx.restore();
+    }
 }
 
-function loop() {
+function drawOffenders() {
+    for (let i = 0; i < balls.length; i++) {
+        const b = balls[i];
+        if (b.overFrames <= 0) continue;
+
+        const t = Math.min(1, b.overFrames / CONFIG.dangerFrames);
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r + 3, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(255,60,60," + (0.35 + t * 0.6) + ")";
+        ctx.lineWidth = 2 + t * 2;
+        ctx.stroke();
+    }
+}
+
+function step() {
+    if (!gameOver) { physics(); updateCombo(); }
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        if (particles[i].life <= 0) particles.splice(i, 1);
+    }
+}
+
+function render() {
     ctx.save();
     if (shake > 0.4) {
         ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
@@ -1243,14 +1272,34 @@ function loop() {
     ctx.fillRect(0, 0, W, H);
 
     drawDanger();
-    if (!gameOver) { physics(); updateCombo(); }
     for (let i = 0; i < balls.length; i++) balls[i].draw();
-    if (current) current.draw();
-    for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].update(); particles[i].draw();
-        if (particles[i].life <= 0) particles.splice(i, 1);
+    drawOffenders();
+
+    if (current) {
+        // Bola de prévia translúcida indica posição de lançamento bloqueada.
+        if (!gameOver && isSpawnBlocked(current)) ctx.globalAlpha = 0.35;
+        current.draw();
+        ctx.globalAlpha = 1;
     }
+
+    for (let i = 0; i < particles.length; i++) particles[i].draw();
     ctx.restore();
+}
+
+function loop(now) {
+    if (!lastTime) lastTime = now;
+
+    // Passo fixo de 60 Hz: o jogo roda na mesma velocidade em qualquer tela.
+    // O limite de 100 ms evita rajada de passos ao voltar de outra aba.
+    accumulator += Math.min(now - lastTime, 100);
+    lastTime = now;
+
+    while (accumulator >= STEP_MS) {
+        step();
+        accumulator -= STEP_MS;
+    }
+
+    render();
     requestAnimationFrame(loop);
 }
 
@@ -1304,7 +1353,7 @@ function start() {
         elGuide.style.display = "flex";
         elHint.style.display = "none";
     }
-    loop();
+    requestAnimationFrame(loop);
 }
 
 window.addEventListener("resize", resize);
