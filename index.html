@@ -11,10 +11,12 @@
         #game-container.phase-2{background:radial-gradient(ellipse at 50% 0%,#0f2a2a 0%,#0a1a1a 70%)}
         #game-container.phase-3{background:radial-gradient(ellipse at 50% 0%,#1a0a1a 0%,#0d0610 70%)}
         #game-container.phase-4{background:radial-gradient(ellipse at 50% 0%,#93c5fd 0%,#60a5fa 45%,#3b82f6 100%)}
+        #game-container.phase-5{background:radial-gradient(ellipse at 50% 0%,#3b4a63 0%,#1e293b 50%,#0b1220 100%)}
         #gameCanvas{display:block;border-radius:16px;box-shadow:0 0 60px rgba(120,80,255,.12),inset 0 0 0 1px rgba(255,255,255,.04);touch-action:none;background:rgba(255,255,255,.02)}
         #game-container.phase-2 #gameCanvas{box-shadow:0 0 60px rgba(45,212,191,.12),inset 0 0 0 1px rgba(255,255,255,.04)}
         #game-container.phase-3 #gameCanvas{box-shadow:0 0 60px rgba(190,24,93,.15),inset 0 0 0 1px rgba(255,255,255,.04)}
         #game-container.phase-4 #gameCanvas{box-shadow:0 0 50px rgba(59,130,246,.15),inset 0 0 0 1px rgba(255,255,255,.12)}
+        #game-container.phase-5 #gameCanvas{box-shadow:0 0 60px rgba(251,191,36,.14),inset 0 0 0 1px rgba(255,255,255,.08)}
         #ui-top{position:absolute;top:14px;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:0 18px;z-index:10;pointer-events:none}
         .ui-box{background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:14px;padding:9px 16px;color:#fff;font-size:14px;font-weight:600;letter-spacing:.3px;border:1px solid rgba(255,255,255,.07)}
         #left-ui{display:flex;flex-direction:column;gap:6px;pointer-events:auto}
@@ -123,6 +125,7 @@
                 <div class="menu-record-row"><span class="label">Recorde Fase 2</span><span class="value" id="menu-rec-2">0</span></div>
                 <div class="menu-record-row"><span class="label">Recorde Fase 3</span><span class="value" id="menu-rec-3">0</span></div>
                 <div class="menu-record-row"><span class="label">Recorde Fase 4</span><span class="value" id="menu-rec-4">0</span></div>
+                <div class="menu-record-row"><span class="label">Recorde Fase 5</span><span class="value" id="menu-rec-5">0</span></div>
                 <div class="menu-record-row total"><span class="label">Recorde Total</span><span class="value" id="menu-rec-total">0</span></div>
             </div>
             <div class="menu-phases">
@@ -130,6 +133,7 @@
                 <button class="phase-btn locked" id="btn-phase2"><span>Fase 2</span><span class="lock-text">Bloqueada</span></button>
                 <button class="phase-btn locked" id="btn-phase3"><span>Fase 3</span><span class="lock-text">Bloqueada</span></button>
                 <button class="phase-btn locked" id="btn-phase4"><span>Fase 4</span><span class="lock-text">Bloqueada</span></button>
+                <button class="phase-btn locked" id="btn-phase5"><span>Fase 5</span><span class="lock-text">Bloqueada</span></button>
             </div>
             <button id="menu-guide-btn">Guia de Mecânicas</button>
             <button id="menu-close">Fechar</button>
@@ -144,7 +148,8 @@
             <div class="mech-item"><h3>Bola Espelho (Fase 3)</h3><p>Ao tocar em outra bola, copia o nível dela e se transforma na mesma.</p></div>
             <div class="mech-item"><h3>Crescimento em Cadeia (Fase 3)</h3><p>Ao fazer um merge de nível 8 ou superior, 50% de chance de todas as bolas do mesmo nível na tela subirem +1 nível.</p></div>
             <div class="mech-item"><h3>Bola Prisma (Fase 4)</h3><p>Cai onde você escolher. Ao acertar bolas, faz merge e remove as atingidas. Os pontos contam normalmente.</p></div>
-            <div class="mech-item"><h3>Pontuação por Fase</h3><p>Fase 1 = x1 | Fase 2 = x2 | Fase 3 = x3 | Fase 4 = x4</p></div>
+            <div class="mech-item"><h3>Evolução Temática (Fase 5)</h3><p>Cada nível de bola tem um tema e um visual próprios. Ao fundir, a bola se transforma no próximo tema.</p></div>
+            <div class="mech-item"><h3>Pontuação por Fase</h3><p>Fase 1 = x1 | Fase 2 = x2 | Fase 3 = x3 | Fase 4 = x4 | Fase 5 = x5</p></div>
             <button id="guide-close">Entendi</button>
         </div>
     </div>
@@ -175,7 +180,8 @@ const CONFIG = {
     specialChance: 0.09,
     phase2Unlock: 50000,
     phase3Unlock: 75000,
-    phase4Unlock: 100000
+    phase4Unlock: 100000,
+    phase5Unlock: 380000
 };
 
 // ================================================================
@@ -250,6 +256,24 @@ const LEVELS_P4 = [
     {radius:132,color:"#F0ABFC",score:16384}
 ];
 
+const LEVELS_P5 = [
+    {radius:15,color:"#F5A623",score:1},
+    {radius:19,color:"#EDEDED",score:2},
+    {radius:23,color:"#C9D43A",score:4},
+    {radius:28,color:"#8A7A3A",score:8},
+    {radius:33,color:"#2F6FE0",score:16},
+    {radius:39,color:"#2FC4B2",score:32},
+    {radius:45,color:"#E04668",score:64},
+    {radius:52,color:"#3B6FE0",score:128},
+    {radius:60,color:"#2AA9AD",score:256},
+    {radius:70,color:"#1FB26B",score:512},
+    {radius:82,color:"#C9CFE0",score:1024},
+    {radius:94,color:"#19F0D3",score:2048},
+    {radius:108,color:"#E040C8",score:4096},
+    {radius:120,color:"#F2B90F",score:8192},
+    {radius:132,color:"#7AA8FF",score:16384}
+];
+
 let LEVELS = LEVELS_P1;
 
 // ================================================================
@@ -297,14 +321,17 @@ let highScore1 = parseInt(localStorage.getItem("sc_high_1") || "0");
 let highScore2 = parseInt(localStorage.getItem("sc_high_2") || "0");
 let highScore3 = parseInt(localStorage.getItem("sc_high_3") || "0");
 let highScore4 = parseInt(localStorage.getItem("sc_high_4") || "0");
+let highScore5 = parseInt(localStorage.getItem("sc_high_5") || "0");
 
 let phase2Unlocked = localStorage.getItem("sc_unlocked_2") === "1" || localStorage.getItem("sc_dev") === "1";
 let phase3Unlocked = localStorage.getItem("sc_unlocked_3") === "1" || localStorage.getItem("sc_dev") === "1";
 let phase4Unlocked = localStorage.getItem("sc_unlocked_4") === "1" || localStorage.getItem("sc_dev") === "1";
+let phase5Unlocked = localStorage.getItem("sc_unlocked_5") === "1" || localStorage.getItem("sc_dev") === "1";
 
 let unlockShown2 = false;
 let unlockShown3 = false;
 let unlockShown4 = false;
+let unlockShown5 = false;
 let pendingUnlockPhase = 0;
 
 let heldLevel = 0, heldSpecial = null;
@@ -347,10 +374,12 @@ const elBtnPhase1 = document.getElementById("btn-phase1");
 const elBtnPhase2 = document.getElementById("btn-phase2");
 const elBtnPhase3 = document.getElementById("btn-phase3");
 const elBtnPhase4 = document.getElementById("btn-phase4");
+const elBtnPhase5 = document.getElementById("btn-phase5");
 const elMenuRec1 = document.getElementById("menu-rec-1");
 const elMenuRec2 = document.getElementById("menu-rec-2");
 const elMenuRec3 = document.getElementById("menu-rec-3");
 const elMenuRec4 = document.getElementById("menu-rec-4");
+const elMenuRec5 = document.getElementById("menu-rec-5");
 const elMenuRecTotal = document.getElementById("menu-rec-total");
 const elContainer = document.getElementById("game-container");
 const elMenuGuideBtn = document.getElementById("menu-guide-btn");
@@ -364,6 +393,7 @@ function getScoreMultiplier() {
     if (currentPhase === 2) return 2;
     if (currentPhase === 3) return 3;
     if (currentPhase === 4) return 4;
+    if (currentPhase === 5) return 5;
     return 1;
 }
 
@@ -425,6 +455,12 @@ class Ball {
         // Cristal lapidado exclusivo das bolas normais da Fase 4.
         if (currentPhase === 4 && !this.special) {
             drawPhase4Crystal(this.x, this.y, this.r, this.color);
+            return;
+        }
+
+        // Esferas temáticas exclusivas da Fase 5 (sprites em cache).
+        if (currentPhase === 5 && !this.special) {
+            drawPhase5Ball(this.x, this.y, this.r, this.level);
             return;
         }
 
@@ -674,6 +710,747 @@ function drawPhase4Crystal(x, y, r, color) {
 }
 
 // ================================================================
+// FASE 5 — BOLAS TEMÁTICAS DESENHADAS NO CANVAS
+// ================================================================
+// Cada nível é desenhado uma única vez num canvas fora da tela (sprite) e
+// depois só copiado com drawImage, o que mantém o jogo leve. O desenho usa
+// coordenadas de círculo unitário (raio = 1) e uma projeção esférica, para que
+// os padrões se curvem como se estivessem sobre uma esfera.
+const PHASE5_SPRITE_SCALE = 2;
+const phase5Sprites = [];
+const phase5Previews = [];
+
+function seededRandom(seed) {
+    let t = seed >>> 0;
+    return function() {
+        t += 0x6D2B79F5;
+        let r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+function hash2(x, y) {
+    const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+    return n - Math.floor(n);
+}
+
+function hsl(h, s, l, a) {
+    if (a === undefined) return "hsl(" + h + "," + s + "%," + l + "%)";
+    return "hsla(" + h + "," + s + "%," + l + "%," + a + ")";
+}
+
+// Projeção esférica: o plano do padrão (d = 1 é a borda visível) vira a
+// metade frontal de uma esfera, comprimindo os desenhos perto da borda.
+function p5Warp(u, v) {
+    const d = Math.sqrt(u * u + v * v);
+    if (d < 0.00001) return [0, 0];
+    const rho = d <= 1 ? Math.sin(d * Math.PI / 2) : d;
+    return [u / d * rho, v / d * rho];
+}
+
+// Cada aresta é subdividida antes da projeção, assim retas viram curvas.
+function p5Path(g, pts, close) {
+    const n = pts.length;
+    const last = close ? n : n - 1;
+    let first = true;
+
+    g.beginPath();
+    for (let i = 0; i < last; i++) {
+        const a = pts[i], b = pts[(i + 1) % n];
+        const steps = Math.max(2, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 0.1));
+        for (let k = 0; k < steps; k++) {
+            const t = k / steps;
+            const w = p5Warp(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t);
+            if (first) { g.moveTo(w[0], w[1]); first = false; }
+            else g.lineTo(w[0], w[1]);
+        }
+    }
+
+    if (close) {
+        g.closePath();
+    } else {
+        const e = p5Warp(pts[n - 1][0], pts[n - 1][1]);
+        g.lineTo(e[0], e[1]);
+    }
+}
+
+function p5Poly(g, pts, fill, stroke, lineWidth) {
+    p5Path(g, pts, true);
+    if (fill) {
+        g.fillStyle = fill;
+        g.fill();
+    }
+    if (stroke) {
+        g.strokeStyle = stroke;
+        g.lineWidth = lineWidth;
+        g.lineJoin = "round";
+        g.stroke();
+    }
+}
+
+function p5Line(g, pts, color, lineWidth) {
+    p5Path(g, pts, false);
+    g.strokeStyle = color;
+    g.lineWidth = lineWidth;
+    g.lineCap = "round";
+    g.lineJoin = "round";
+    g.stroke();
+}
+
+function regPoly(cx, cy, rad, n, rotDeg) {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+        const a = (rotDeg + i * 360 / n) * Math.PI / 180;
+        pts.push([cx + Math.cos(a) * rad, cy + Math.sin(a) * rad]);
+    }
+    return pts;
+}
+
+function p5Dot(g, x, y, rad, fill) {
+    p5Poly(g, regPoly(x, y, rad, 12, 0), fill);
+}
+
+function p5Star(g, x, y, size, alpha) {
+    const t = size * 0.16;
+    g.beginPath();
+    g.moveTo(x, y - size);
+    g.lineTo(x + t, y - t);
+    g.lineTo(x + size, y);
+    g.lineTo(x + t, y + t);
+    g.lineTo(x, y + size);
+    g.lineTo(x - t, y + t);
+    g.lineTo(x - size, y);
+    g.lineTo(x - t, y - t);
+    g.closePath();
+    g.fillStyle = "rgba(255,255,255," + alpha + ")";
+    g.fill();
+}
+
+// Centros de uma grade hexagonal com vértice para cima.
+function hexCenters(a, extent) {
+    const list = [];
+    const w = Math.sqrt(3) * a;
+    const rows = Math.ceil(extent / (a * 1.5));
+
+    for (let j = -rows; j <= rows; j++) {
+        const off = (j & 1) ? w / 2 : 0;
+        for (let i = -rows; i <= rows; i++) {
+            list.push([i * w + off, j * a * 1.5]);
+        }
+    }
+    return list;
+}
+
+function p5Background(g, color) {
+    g.fillStyle = color;
+    g.fillRect(-1.6, -1.6, 3.2, 3.2);
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 1 — FAVO DE MEL
+// ----------------------------------------------------------------
+function paintHoneycomb(g, rand) {
+    p5Background(g, "#6b3500");
+
+    const a = 0.22;
+    for (const c of hexCenters(a, 1.6)) {
+        const lum = 50 + rand() * 12;
+        p5Poly(g, regPoly(c[0], c[1], a * 0.92, 6, 30), hsl(38, 96, lum), "#7a3d00", 0.05);
+        p5Poly(g, regPoly(c[0], c[1], a * 0.5, 6, 30), hsl(46, 100, 74, 0.5));
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 2 — BOLA DE FUTEBOL
+// ----------------------------------------------------------------
+function paintFootball(g) {
+    p5Background(g, "#f4f4f2");
+
+    const pa = 0.25;
+    const edge = 2 * pa * Math.sin(Math.PI / 5);
+    const dist = pa + edge + pa;
+    const center = [], inner = [], sideLow = [], sideHigh = [], outer = [];
+
+    for (let k = 0; k < 5; k++) {
+        const th = (-90 + 72 * k) * Math.PI / 180;
+        const ox = Math.cos(th) * dist, oy = Math.sin(th) * dist;
+        const pent = regPoly(ox, oy, pa, 5, -90 + 72 * k + 180);
+
+        center.push([Math.cos(th) * pa, Math.sin(th) * pa]);
+        outer.push(pent);
+        inner.push(pent[0]);
+
+        // Os dois vértices vizinhos ao interno: um aponta para o pentágono
+        // seguinte e o outro para o anterior.
+        const side = (pent[1][0] - ox) * -Math.sin(th) + (pent[1][1] - oy) * Math.cos(th);
+        sideHigh.push(side > 0 ? pent[1] : pent[4]);
+        sideLow.push(side > 0 ? pent[4] : pent[1]);
+    }
+
+    for (let k = 0; k < 5; k++) {
+        const n = (k + 1) % 5;
+        p5Poly(g, [center[k], center[n], inner[n], sideLow[n], sideHigh[k], inner[k]], "#f7f7f5", "#1c1c1c", 0.05);
+    }
+
+    p5Poly(g, center, "#151515", "#151515", 0.03);
+    for (const pent of outer) p5Poly(g, pent, "#151515", "#151515", 0.03);
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 3 — ABACAXI
+// ----------------------------------------------------------------
+function paintPineapple(g, rand) {
+    p5Background(g, "#3d2f05");
+
+    const h = 0.26;
+    for (let j = -7; j <= 7; j++) {
+        for (let i = -7; i <= 7; i++) {
+            if ((i + j) & 1) continue;
+
+            const cx = i * h, cy = j * h, s = h * 0.94;
+            const hue = 50 + rand() * 14;
+            const lum = 46 + rand() * 10;
+
+            p5Poly(g, [[cx, cy - s], [cx + s, cy], [cx, cy + s], [cx - s, cy]], hsl(hue, 88, lum), "#3d2f05", 0.055);
+            p5Poly(g, [[cx, cy - s * 0.8], [cx + s * 0.8, cy], [cx - s * 0.8, cy]], hsl(hue + 4, 95, lum + 16, 0.45));
+            p5Dot(g, cx, cy + s * 0.18, h * 0.14, "#4a3306");
+        }
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 4 — CASCO DE TARTARUGA
+// ----------------------------------------------------------------
+function paintTurtle(g, rand) {
+    p5Background(g, "#e3c98f");
+
+    const a = 0.3;
+    for (const c of hexCenters(a, 1.6)) {
+        const d = Math.min(1, Math.hypot(c[0], c[1]) / 1.1);
+        const hue = 32 + d * 62 + rand() * 8;
+        const sat = 38 + rand() * 10;
+        const lum = 34 + rand() * 8;
+
+        p5Poly(g, regPoly(c[0], c[1], a * 0.9, 6, 30), hsl(hue, sat, lum), "#c9a560", 0.05);
+
+        // Anéis de crescimento de cada placa.
+        for (const k of [0.66, 0.4]) {
+            p5Poly(g, regPoly(c[0], c[1], a * 0.9 * k, 6, 30), null, hsl(hue, sat, lum + 16, 0.85), 0.022);
+        }
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 5 — CUBO MÁGICO
+// ----------------------------------------------------------------
+function paintRubik(g) {
+    p5Background(g, "#0c0c0e");
+
+    const colors = ["#d62d20", "#ffd400", "#0b5fd8", "#f4f4f4", "#00a651", "#ff7a00", "#0b5fd8", "#d62d20", "#f4f4f4"];
+    const step = 0.56, half = 0.245, cut = 0.07;
+    let n = 0;
+
+    for (let j = -1; j <= 1; j++) {
+        for (let i = -1; i <= 1; i++) {
+            const cx = i * step, cy = j * step;
+            p5Poly(g, [
+                [cx - half + cut, cy - half], [cx + half - cut, cy - half],
+                [cx + half, cy - half + cut], [cx + half, cy + half - cut],
+                [cx + half - cut, cy + half], [cx - half + cut, cy + half],
+                [cx - half, cy + half - cut], [cx - half, cy - half + cut]
+            ], colors[n++]);
+        }
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 6 — PIXEL RETRÔ (pixels retos, sem projeção esférica)
+// ----------------------------------------------------------------
+function paintPixel(g) {
+    p5Background(g, "#0b3b3a");
+
+    const palette = ["#0b3b3a", "#117a76", "#2fc4b2", "#a6f5e2"];
+    const bayer = [[0, 2], [3, 1]];
+    const cell = 0.14;
+
+    for (let j = -8; j < 8; j++) {
+        for (let i = -8; i < 8; i++) {
+            const x = (i + 0.5) * cell, y = (j + 0.5) * cell;
+            const d2 = x * x + y * y;
+            if (d2 > 1.1) continue;
+
+            const nz = Math.sqrt(Math.max(0, 1 - d2));
+            const light = -0.55 * x - 0.65 * y + 0.5 * nz;
+            const value = light + (bayer[j & 1][i & 1] / 4 - 0.375) * 0.2;
+
+            let index = 0;
+            if (value > 0.62) index = 3;
+            else if (value > 0.3) index = 2;
+            else if (value > -0.1) index = 1;
+            if (d2 > 0.86) index = 0;
+
+            g.fillStyle = palette[index];
+            g.fillRect(x - cell / 2 - 0.0075, y - cell / 2 - 0.0075, cell + 0.015, cell + 0.015);
+        }
+    }
+
+    // Reflexo em três pixels.
+    g.fillStyle = "#f2fffb";
+    for (const c of [[-4, -4], [-3, -4], [-4, -3]]) {
+        g.fillRect(c[0] * cell, c[1] * cell, cell, cell);
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 7 — ORIGAMI
+// ----------------------------------------------------------------
+function paintOrigami(g, rand) {
+    p5Background(g, "#7a1230");
+
+    const s = 0.46, hgt = s * 0.866;
+    const pt = function(x, j) {
+        return [x * s + (hash2(x, j) - 0.5) * s * 0.28, j * hgt + (hash2(j, x) - 0.5) * s * 0.28];
+    };
+
+    for (let j = -5; j <= 5; j++) {
+        const o = (j & 1) ? 0.5 : 0;
+        for (let i = -5; i <= 5; i++) {
+            const A = pt(i + o, j), B = pt(i + 1 + o, j);
+            const C = pt(i + o + 0.5, j + 1), D = pt(i + o + 1.5, j + 1);
+            const tris = [[A, B, C], [C, D, B]];
+
+            for (let t = 0; t < 2; t++) {
+                const lum = 34 + rand() * 30 + (t ? 8 : -4);
+                p5Poly(g, tris[t], hsl(348 + rand() * 12, 80, lum), hsl(350, 90, 88, 0.55), 0.022);
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 8 — VITRAL
+// ----------------------------------------------------------------
+function paintStainedGlass(g) {
+    p5Background(g, "#0e0e12");
+
+    const palette = ["#1e56d6", "#d8282f", "#f4b400", "#1a9b4b", "#7d2bd1", "#ec6f1a", "#0aa6c9"];
+    const s = 0.4;
+    const pt = function(i, j) {
+        return [i * s + (hash2(i, j) - 0.5) * s * 0.5, j * s + (hash2(j + 9, i + 4) - 0.5) * s * 0.5];
+    };
+
+    for (let j = -4; j < 4; j++) {
+        for (let i = -4; i < 4; i++) {
+            const quad = [pt(i, j), pt(i + 1, j), pt(i + 1, j + 1), pt(i, j + 1)];
+            const color = palette[Math.floor(hash2(i * 3.1, j * 5.7) * palette.length)];
+            const cx = (quad[0][0] + quad[2][0]) / 2, cy = (quad[0][1] + quad[2][1]) / 2;
+
+            p5Poly(g, quad, color, "#0e0e12", 0.08);
+
+            // Miolo mais claro: a luz atravessando o vidro.
+            const core = quad.map(function(p) {
+                return [cx + (p[0] - cx) * 0.5, cy + (p[1] - cy) * 0.5];
+            });
+            p5Poly(g, core, "rgba(255,255,255,0.28)");
+        }
+    }
+
+    // Rosácea central.
+    p5Poly(g, regPoly(0, 0, 0.3, 12, 0), "#f6c945", "#0e0e12", 0.07);
+    p5Poly(g, regPoly(0, 0, 0.14, 12, 15), "#d8282f", "#0e0e12", 0.05);
+    for (let k = 0; k < 6; k++) {
+        const a = k * Math.PI / 3;
+        p5Line(g, [[0, 0], [Math.cos(a) * 0.3, Math.sin(a) * 0.3]], "#0e0e12", 0.04);
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 9 — MOSAICO ROMANO
+// ----------------------------------------------------------------
+function paintMosaic(g, rand) {
+    p5Background(g, "#2b2118");
+
+    const bands = [
+        {to: 0.2, colors: ["#b5532f", "#c8643a", "#a14626"]},
+        {to: 0.4, colors: ["#efe2c0", "#e7d8b0", "#f4ead0"]},
+        {to: 0.6, colors: ["#1a9aa0", "#23aeb3", "#168489"]},
+        {to: 0.8, colors: ["#b5532f", "#9c4325", "#c8643a"]},
+        {to: 99, colors: ["#1b3d6d", "#244a82", "#17335c"]}
+    ];
+    const s = 0.14;
+
+    for (let j = -9; j <= 9; j++) {
+        for (let i = -9; i <= 9; i++) {
+            const cx = i * s, cy = j * s;
+            const d = Math.hypot(cx, cy);
+            const band = bands.find(function(b) { return d < b.to; });
+            const color = band.colors[Math.floor(rand() * band.colors.length)];
+            const half = s * 0.44, rot = (rand() - 0.5) * 0.22;
+            const cr = Math.cos(rot), sr = Math.sin(rot);
+            const pts = [[-half, -half], [half, -half], [half, half], [-half, half]].map(function(p) {
+                return [cx + p[0] * cr - p[1] * sr, cy + p[0] * sr + p[1] * cr];
+            });
+
+            p5Poly(g, pts, color);
+        }
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 10 — ESCAMAS DE DRAGÃO
+// ----------------------------------------------------------------
+function paintDragonScales(g, rand) {
+    const bg = g.createRadialGradient(0, 0, 0, 0, 0, 1.2);
+    bg.addColorStop(0, "#06352a");
+    bg.addColorStop(1, "#021a14");
+    g.fillStyle = bg;
+    g.fillRect(-1.6, -1.6, 3.2, 3.2);
+
+    // As fileiras de baixo são desenhadas primeiro: cada escama cobre a de baixo.
+    const R = 0.2;
+    for (let j = 9; j >= -9; j--) {
+        const off = (j & 1) ? R : 0;
+        for (let i = -6; i <= 6; i++) {
+            const cx = i * 2 * R + off, cy = j * R;
+            const d = Math.hypot(cx, cy);
+            const w = p5Warp(cx, cy);
+            const k = d <= 1 ? (d < 0.001 ? Math.PI / 2 : Math.sin(d * Math.PI / 2) / d) : 1;
+            const rs = R * k;
+            const hue = 148 + rand() * 14;
+
+            const grad = g.createRadialGradient(w[0], w[1] - rs * 0.35, 0, w[0], w[1], rs * 1.25);
+            grad.addColorStop(0, hsl(hue, 70, 46));
+            grad.addColorStop(0.6, hsl(hue + 4, 72, 27));
+            grad.addColorStop(1, hsl(hue + 10, 78, 12));
+
+            p5Poly(g, regPoly(cx, cy, R, 18, 0), grad, "#e9b93c", 0.03);
+        }
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 11 — BOLA DE DISCO
+// ----------------------------------------------------------------
+function paintDiscoBall(g, rand) {
+    p5Background(g, "#1d1d26");
+
+    const s = 0.17, h = s * 0.45;
+    for (let j = -8; j <= 8; j++) {
+        for (let i = -8; i <= 8; i++) {
+            const cx = i * s, cy = j * s;
+            const lum = 58 + rand() * 34;
+            const tint = rand();
+            const color = tint < 0.18 ? hsl(190, 55, lum) : tint < 0.32 ? hsl(300, 45, lum) : hsl(220, 12, lum);
+
+            p5Poly(g, [[cx - h, cy - h], [cx + h, cy - h], [cx + h, cy + h], [cx - h, cy + h]], color);
+            p5Poly(g, [[cx - h, cy - h], [cx + h, cy - h], [cx - h, cy + h]], "rgba(255,255,255,0.38)");
+        }
+    }
+
+    // Brilhos fixos; os que piscam são desenhados a cada quadro.
+    for (const gl of [[-0.45, -0.3], [0.35, -0.55], [0.5, 0.25], [-0.2, 0.55]]) {
+        p5Star(g, gl[0], gl[1], 0.16, 0.85);
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 12 — PLACA DE CIRCUITO
+// ----------------------------------------------------------------
+function paintCircuit(g, rand) {
+    const bg = g.createRadialGradient(0, 0, 0, 0, 0, 1.3);
+    bg.addColorStop(0, "#0c4a3a");
+    bg.addColorStop(1, "#031812");
+    g.fillStyle = bg;
+    g.fillRect(-1.6, -1.6, 3.2, 3.2);
+
+    const q = 0.16;
+    const dirs = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
+    const traces = [];
+
+    for (let t = 0; t < 18; t++) {
+        let x = Math.round((rand() * 2 - 1) * 5) * q;
+        let y = Math.round((rand() * 2 - 1) * 5) * q;
+        let dir = Math.floor(rand() * 8);
+        const pts = [[x, y]];
+        const segs = 2 + Math.floor(rand() * 3);
+
+        for (let n = 0; n < segs; n++) {
+            const len = 1 + Math.floor(rand() * 3);
+            x += dirs[dir][0] * q * len;
+            y += dirs[dir][1] * q * len;
+            pts.push([x, y]);
+            dir = (dir + (rand() < 0.5 ? 1 : 7)) % 8;
+        }
+        traces.push(pts);
+    }
+
+    g.save();
+    g.shadowColor = "#19f0d3";
+    g.shadowBlur = g.canvas.width * 0.03;
+    for (const pts of traces) p5Line(g, pts, "#19f0d3", 0.03);
+    g.restore();
+
+    for (const pts of traces) {
+        const ends = [pts[0], pts[pts.length - 1]];
+        for (const e of ends) {
+            p5Poly(g, regPoly(e[0], e[1], 0.05, 10, 0), "#0a2a24", "#7dfff0", 0.02);
+        }
+    }
+
+    // Chip central com terminais.
+    p5Poly(g, [[-0.2, -0.2], [0.2, -0.2], [0.2, 0.2], [-0.2, 0.2]], "#07120f", "#19f0d3", 0.03);
+    for (let k = -1; k <= 1; k++) {
+        p5Line(g, [[k * 0.1, -0.2], [k * 0.1, -0.3]], "#19f0d3", 0.024);
+        p5Line(g, [[k * 0.1, 0.2], [k * 0.1, 0.3]], "#19f0d3", 0.024);
+        p5Line(g, [[-0.2, k * 0.1], [-0.3, k * 0.1]], "#19f0d3", 0.024);
+        p5Line(g, [[0.2, k * 0.1], [0.3, k * 0.1]], "#19f0d3", 0.024);
+    }
+    p5Poly(g, regPoly(0, 0, 0.06, 4, 45), "#19f0d3");
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 13 — CALEIDOSCÓPIO
+// ----------------------------------------------------------------
+function paintKaleidoscope(g, rand) {
+    p5Background(g, "#14081f");
+
+    const rings = [0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.25];
+    const sectors = 12;
+    const step = Math.PI * 2 / sectors;
+    const vals = rings.map(function() {
+        return Array.from({length: sectors / 2}, function() { return Math.floor(rand() * 6); });
+    });
+
+    for (let m = 0; m < rings.length - 1; m++) {
+        for (let k = 0; k < sectors; k++) {
+            // Simetria de espelho: o lado direito repete o esquerdo.
+            const v = vals[m][k < sectors / 2 ? k : sectors - 1 - k];
+            const hue = (v * 58 + m * 37 + 10) % 360;
+            const a0 = k * step, a1 = (k + 1) * step;
+            const r0 = rings[m], r1 = rings[m + 1];
+            const p00 = [Math.cos(a0) * r0, Math.sin(a0) * r0];
+            const p10 = [Math.cos(a0) * r1, Math.sin(a0) * r1];
+            const p11 = [Math.cos(a1) * r1, Math.sin(a1) * r1];
+            const p01 = [Math.cos(a1) * r0, Math.sin(a1) * r0];
+
+            p5Poly(g, [p00, p10, p11], hsl(hue, 88, 50), "rgba(255,255,255,0.3)", 0.015);
+            p5Poly(g, [p00, p11, p01], hsl((hue + 24) % 360, 90, 64), "rgba(255,255,255,0.3)", 0.015);
+        }
+    }
+
+    p5Poly(g, regPoly(0, 0, 0.09, 12, 0), "#fff6c8", "#ffd54a", 0.03);
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 14 — ESFERA GEODÉSICA DOURADA
+// ----------------------------------------------------------------
+function paintGeodesic(g, rand) {
+    p5Background(g, "#2a1c00");
+
+    const s = 0.4, hgt = s * 0.866;
+    const pt = function(x, j) { return [x * s, j * hgt]; };
+    const nodes = [];
+
+    for (let j = -5; j <= 5; j++) {
+        const o = (j & 1) ? 0.5 : 0;
+        for (let i = -5; i <= 5; i++) {
+            const A = pt(i + o, j), B = pt(i + 1 + o, j);
+            const C = pt(i + o + 0.5, j + 1), D = pt(i + o + 1.5, j + 1);
+            const tris = [[A, B, C], [C, D, B]];
+
+            for (let t = 0; t < 2; t++) {
+                const tri = tris[t];
+                const cx = (tri[0][0] + tri[1][0] + tri[2][0]) / 3;
+                const cy = (tri[0][1] + tri[1][1] + tri[2][1]) / 3;
+                const light = (-0.5 * cx - 0.6 * cy) / 0.9;
+                const lum = 44 + light * 16 + (t ? 5 : -3) + rand() * 5;
+
+                p5Poly(g, tri, hsl(44, 90, lum), "#5a3d00", 0.05);
+
+                // Chanfro de cada faceta.
+                const bevel = tri.map(function(p) {
+                    return [cx + (p[0] - cx) * 0.7, cy + (p[1] - cy) * 0.7];
+                });
+                p5Poly(g, bevel, "rgba(255,236,150,0.16)", "rgba(255,244,190,0.65)", 0.016);
+            }
+            nodes.push(A);
+        }
+    }
+
+    for (const n of nodes) p5Dot(g, n[0], n[1], 0.03, "#fff3b0");
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 15 — HOLOGRAMA
+// ----------------------------------------------------------------
+function paintHologram(g) {
+    const bg = g.createRadialGradient(-0.2, -0.2, 0, 0, 0, 1.2);
+    bg.addColorStop(0, "#1b1250");
+    bg.addColorStop(1, "#070a24");
+    g.fillStyle = bg;
+    g.fillRect(-1.6, -1.6, 3.2, 3.2);
+
+    for (let m = 0; m < 7; m++) {
+        const rad = 1.2 - m * 0.17;
+        const hue = (200 + m * 48) % 360;
+        const rot = m * 11;
+        const tint = (hue + 60) % 360;
+
+        p5Poly(g, regPoly(0, 0, rad, 6, rot), hsl(hue, 100, 60, 0.1), hsl(hue, 100, 72, 0.9), 0.022);
+        p5Poly(g, regPoly(0, 0, rad, 3, rot + (m % 2) * 60), hsl(tint, 100, 65, 0.1), hsl(tint, 100, 78, 0.7), 0.016);
+    }
+
+    for (let k = 0; k < 6; k++) {
+        const a = k * Math.PI / 3 + 0.2;
+        p5Line(g, [[0, 0], [Math.cos(a) * 1.2, Math.sin(a) * 1.2]], "rgba(255,255,255,0.3)", 0.012);
+    }
+
+    p5Poly(g, regPoly(0, 0, 0.09, 6, 0), "#ffffff", "#9fd2ff", 0.02);
+}
+
+// ----------------------------------------------------------------
+// ACABAMENTO COMUM — mesma luz, brilho e borda em todos os níveis
+// ----------------------------------------------------------------
+function paintPhase5Finish(g, opt) {
+    const gloss = opt.gloss, limb = opt.limb;
+
+    // Escurecimento nas bordas: dá volume de esfera.
+    const shade = g.createRadialGradient(-0.32, -0.36, 0.1, 0, 0, 1.08);
+    shade.addColorStop(0, "rgba(0,0,0,0)");
+    shade.addColorStop(0.55, "rgba(0,0,0," + (0.1 * limb) + ")");
+    shade.addColorStop(1, "rgba(0,0,0," + (0.62 * limb) + ")");
+    g.fillStyle = shade;
+    g.fillRect(-1.1, -1.1, 2.2, 2.2);
+
+    // Luz suave no canto superior esquerdo.
+    const glow = g.createRadialGradient(-0.4, -0.45, 0.02, -0.32, -0.36, 0.75);
+    glow.addColorStop(0, "rgba(255,255,255," + (0.5 * gloss) + ")");
+    glow.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = glow;
+    g.fillRect(-1.1, -1.1, 2.2, 2.2);
+
+    if (opt.spec !== false) {
+        g.beginPath();
+        g.ellipse(-0.36, -0.5, 0.26, 0.06, -0.62, 0, Math.PI * 2);
+        g.fillStyle = "rgba(255,255,255," + (0.7 * gloss + 0.1) + ")";
+        g.fill();
+
+        g.beginPath();
+        g.ellipse(-0.5, -0.36, 0.05, 0.03, -0.6, 0, Math.PI * 2);
+        g.fillStyle = "rgba(255,255,255,0.85)";
+        g.fill();
+    }
+
+    // Borda dupla: contorno escuro e filete de luz, como no cristal da Fase 4.
+    g.beginPath();
+    g.arc(0, 0, 0.97, 0, Math.PI * 2);
+    g.strokeStyle = "rgba(0,0,0,0.45)";
+    g.lineWidth = 0.07;
+    g.stroke();
+
+    g.beginPath();
+    g.arc(-0.015, -0.015, 0.915, -2.72, -0.48);
+    g.strokeStyle = "rgba(255,255,255," + (0.5 * gloss) + ")";
+    g.lineWidth = 0.025;
+    g.stroke();
+}
+
+const PHASE5_PAINTERS = [
+    paintHoneycomb, paintFootball, paintPineapple, paintTurtle, paintRubik,
+    paintPixel, paintOrigami, paintStainedGlass, paintMosaic, paintDragonScales,
+    paintDiscoBall, paintCircuit, paintKaleidoscope, paintGeodesic, paintHologram
+];
+
+const PHASE5_FINISH = [
+    {gloss: 0.75, limb: 0.8}, {gloss: 0.85, limb: 0.8}, {gloss: 0.55, limb: 0.9},
+    {gloss: 0.6, limb: 0.9}, {gloss: 0.8, limb: 0.8}, {gloss: 0.15, limb: 0.25, spec: false},
+    {gloss: 0.35, limb: 0.8}, {gloss: 0.5, limb: 0.7}, {gloss: 0.45, limb: 0.85},
+    {gloss: 0.65, limb: 0.8}, {gloss: 0.8, limb: 0.7}, {gloss: 0.4, limb: 0.8},
+    {gloss: 0.55, limb: 0.7}, {gloss: 0.9, limb: 0.7}, {gloss: 0.7, limb: 0.55}
+];
+
+function renderPhase5Sprite(level) {
+    const r = LEVELS_P5[level].radius;
+    const size = Math.ceil(r * 2 * PHASE5_SPRITE_SCALE);
+    const half = size / 2;
+    const sprite = document.createElement("canvas");
+    sprite.width = size;
+    sprite.height = size;
+
+    // Coordenadas unitárias: o círculo da bola tem raio 1.
+    const g = sprite.getContext("2d");
+    g.setTransform(half, 0, 0, half, half, half);
+    g.beginPath();
+    g.arc(0, 0, 1, 0, Math.PI * 2);
+    g.clip();
+
+    PHASE5_PAINTERS[level](g, seededRandom(1000 + level * 77));
+    paintPhase5Finish(g, PHASE5_FINISH[level]);
+    return sprite;
+}
+
+function getPhase5Sprite(level) {
+    if (!phase5Sprites[level]) phase5Sprites[level] = renderPhase5Sprite(level);
+    return phase5Sprites[level];
+}
+
+function getPhase5Preview(level) {
+    if (!phase5Previews[level]) phase5Previews[level] = getPhase5Sprite(level).toDataURL();
+    return phase5Previews[level];
+}
+
+function buildPhase5Sprites() {
+    for (let i = 0; i < LEVELS_P5.length; i++) getPhase5Sprite(i);
+}
+
+// Brilho animado por cima do sprite: só a bola de disco e o holograma.
+function drawPhase5Shimmer(x, y, r, level) {
+    const t = Date.now() / 1000;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, r * 0.97, 0, Math.PI * 2);
+    ctx.clip();
+
+    if (level === 14) {
+        const hue = (t * 60) % 360;
+        const off = (((t * 0.45) % 1) * 3 - 1.5) * r;
+        const cx = x + off, cy = y + off;
+        const band = ctx.createLinearGradient(cx - r * 0.6, cy - r * 0.6, cx + r * 0.6, cy + r * 0.6);
+        band.addColorStop(0, hsl(hue, 100, 60, 0));
+        band.addColorStop(0.3, hsl(hue, 100, 65, 0.35));
+        band.addColorStop(0.5, hsl((hue + 60) % 360, 100, 72, 0.55));
+        band.addColorStop(0.7, hsl((hue + 120) % 360, 100, 65, 0.35));
+        band.addColorStop(1, hsl((hue + 120) % 360, 100, 60, 0));
+
+        ctx.globalCompositeOperation = "lighter";
+        ctx.fillStyle = band;
+        ctx.fillRect(x - r, y - r, r * 2, r * 2);
+        ctx.fillStyle = hsl((hue + 200) % 360, 100, 55, 0.1);
+        ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    } else {
+        for (let i = 0; i < 5; i++) {
+            const ang = i * 2.4 + 0.5;
+            const rad = r * (0.2 + 0.55 * ((i * 0.37) % 1));
+            const pulse = Math.pow(Math.max(0, Math.sin(t * 2.2 + i * 1.9)), 8);
+            if (pulse < 0.05) continue;
+            p5Star(ctx, x + Math.cos(ang) * rad, y + Math.sin(ang) * rad, r * (0.1 + 0.16 * pulse), pulse);
+        }
+    }
+
+    ctx.restore();
+}
+
+function drawPhase5Ball(x, y, r, level) {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(getPhase5Sprite(level), x - r, y - r, r * 2, r * 2);
+
+    if (level === 10 || level === 14) drawPhase5Shimmer(x, y, r, level);
+}
+
+// ================================================================
 // RESIZE
 // ================================================================
 function resize() {
@@ -709,7 +1486,7 @@ function generateBallData() {
     if (highestLevelReached >= 9) maxLevel = Math.max(maxLevel, 7);
     if (currentPhase >= 2) maxLevel = Math.min(maxLevel + 1, LEVELS.length - 2);
     if (currentPhase >= 3) maxLevel = Math.min(maxLevel + 1, LEVELS.length - 2);
-    if (currentPhase === 4) maxLevel = Math.min(maxLevel + 1, LEVELS.length - 2);
+    if (currentPhase >= 4) maxLevel = Math.min(maxLevel + 1, LEVELS.length - 2);
 
     let level;
     const r2 = Math.random();
@@ -728,6 +1505,7 @@ function updatePreview() {
     else if (nextSpecial === "bomb") elNext.style.background = "#222";
     else if (nextSpecial === "mirror") elNext.style.background = "linear-gradient(135deg,#F8FAFC,#94A3B8)";
     else if (nextSpecial === "prism") elNext.style.background = "linear-gradient(135deg,#F0F9FF,#0EA5E9)";
+    else if (currentPhase === 5) elNext.style.background = "url(" + getPhase5Preview(nextLevel) + ") center / cover no-repeat";
     else elNext.style.background = LEVELS[nextLevel].color;
     const s = nextSpecial ? 22 : LEVELS[nextLevel].radius * 0.65;
     elNext.style.width = s + "px"; elNext.style.height = s + "px";
@@ -1036,6 +1814,7 @@ function endGame() {
     if (currentPhase === 2) currentHigh = highScore2;
     if (currentPhase === 3) currentHigh = highScore3;
     if (currentPhase === 4) currentHigh = highScore4;
+    if (currentPhase === 5) currentHigh = highScore5;
 
     if (score > currentHigh) {
         if (currentPhase === 1) {
@@ -1047,9 +1826,12 @@ function endGame() {
         } else if (currentPhase === 3) {
             highScore3 = score;
             localStorage.setItem("sc_high_3", highScore3.toString());
-        } else {
+        } else if (currentPhase === 4) {
             highScore4 = score;
             localStorage.setItem("sc_high_4", highScore4.toString());
+        } else {
+            highScore5 = score;
+            localStorage.setItem("sc_high_5", highScore5.toString());
         }
         isNew = true;
     }
@@ -1057,7 +1839,8 @@ function endGame() {
     elFinal.textContent = score;
     elFinalRecord.textContent = currentPhase === 1 ? highScore1 :
                                  currentPhase === 2 ? highScore2 :
-                                 currentPhase === 3 ? highScore3 : highScore4;
+                                 currentPhase === 3 ? highScore3 :
+                                 currentPhase === 4 ? highScore4 : highScore5;
     elRecord.textContent = elFinalRecord.textContent;
     elNewRecord.style.display = isNew ? "block" : "none";
     elHint.style.display = "none";
@@ -1074,7 +1857,7 @@ function endGame() {
 // ================================================================
 function setPhase(phase) {
     currentPhase = phase;
-    elContainer.classList.remove("phase-2", "phase-3", "phase-4");
+    elContainer.classList.remove("phase-2", "phase-3", "phase-4", "phase-5");
 
     if (phase === 1) {
         LEVELS = LEVELS_P1;
@@ -1090,11 +1873,17 @@ function setPhase(phase) {
         elContainer.classList.add("phase-3");
         elPhaseLabel.textContent = "FASE 3";
         elRecord.textContent = highScore3;
-    } else {
+    } else if (phase === 4) {
         LEVELS = LEVELS_P4;
         elContainer.classList.add("phase-4");
         elPhaseLabel.textContent = "FASE 4";
         elRecord.textContent = highScore4;
+    } else {
+        LEVELS = LEVELS_P5;
+        elContainer.classList.add("phase-5");
+        elPhaseLabel.textContent = "FASE 5";
+        elRecord.textContent = highScore5;
+        buildPhase5Sprites();
     }
     restartGameOnly();
 }
@@ -1137,6 +1926,13 @@ function checkUnlocks() {
         elUnlockText.textContent = "Parabéns! Você alcançou " + CONFIG.phase4Unlock.toLocaleString("pt-BR") + " pontos e liberou a quarta fase.";
         elUnlockScreen.style.display = "flex"; updateMenuButtons();
     }
+    if (!phase5Unlocked && !unlockShown5 && currentPhase === 4 && score >= CONFIG.phase5Unlock) {
+        phase5Unlocked = true; localStorage.setItem("sc_unlocked_5", "1");
+        unlockShown5 = true; pendingUnlockPhase = 5;
+        elUnlockTitle.textContent = "Fase 5 Desbloqueada!";
+        elUnlockText.textContent = "Parabéns! Você alcançou " + CONFIG.phase5Unlock.toLocaleString("pt-BR") + " pontos e liberou a quinta fase.";
+        elUnlockScreen.style.display = "flex"; updateMenuButtons();
+    }
 }
 
 // ================================================================
@@ -1147,7 +1943,8 @@ function openMenu() {
     elMenuRec2.textContent = highScore2;
     elMenuRec3.textContent = highScore3;
     elMenuRec4.textContent = highScore4;
-    elMenuRecTotal.textContent = highScore1 + highScore2 + highScore3 + highScore4;
+    elMenuRec5.textContent = highScore5;
+    elMenuRecTotal.textContent = highScore1 + highScore2 + highScore3 + highScore4 + highScore5;
     updateMenuButtons();
     elMenuScreen.style.display = "flex";
 }
@@ -1185,6 +1982,16 @@ function updateMenuButtons() {
         elBtnPhase4.classList.add("locked");
         elBtnPhase4.querySelector(".lock-text").style.display = "inline";
         elBtnPhase4.classList.remove("active");
+    }
+
+    if (phase5Unlocked) {
+        elBtnPhase5.classList.remove("locked");
+        elBtnPhase5.querySelector(".lock-text").style.display = "none";
+        elBtnPhase5.classList.toggle("active", currentPhase === 5);
+    } else {
+        elBtnPhase5.classList.add("locked");
+        elBtnPhase5.querySelector(".lock-text").style.display = "inline";
+        elBtnPhase5.classList.remove("active");
     }
 }
 
@@ -1265,7 +2072,8 @@ function render() {
         shake *= 0.88;
     } else shake = 0;
 
-    if (currentPhase === 4) ctx.fillStyle = "#bfdbfe";
+    if (currentPhase === 5) ctx.fillStyle = "#17202e";
+    else if (currentPhase === 4) ctx.fillStyle = "#bfdbfe";
     else if (currentPhase === 3) ctx.fillStyle = "#120810";
     else if (currentPhase === 2) ctx.fillStyle = "#0a1f1f";
     else ctx.fillStyle = "#0f0d1f";
@@ -1336,6 +2144,7 @@ elBtnPhase1.addEventListener("click", function(){ if(currentPhase===1){closeMenu
 elBtnPhase2.addEventListener("click", function(){ if(!phase2Unlocked) return; if(currentPhase===2){closeMenu();return;} setPhase(2); closeMenu(); });
 elBtnPhase3.addEventListener("click", function(){ if(!phase3Unlocked) return; if(currentPhase===3){closeMenu();return;} setPhase(3); closeMenu(); });
 elBtnPhase4.addEventListener("click", function(){ if(!phase4Unlocked) return; if(currentPhase===4){closeMenu();return;} setPhase(4); closeMenu(); });
+elBtnPhase5.addEventListener("click", function(){ if(!phase5Unlocked) return; if(currentPhase===5){closeMenu();return;} setPhase(5); closeMenu(); });
 elMenuGuideBtn.addEventListener("click", function(){ closeMenu(); elMechanicsGuide.style.display = "flex"; });
 elGuideClose.addEventListener("click", function(){ elMechanicsGuide.style.display = "none"; prepare(lastX); });
 
