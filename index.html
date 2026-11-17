@@ -74,6 +74,8 @@
         .mech-item{background:rgba(0,0,0,.25);border-radius:12px;padding:12px 14px;margin-bottom:10px}
         .mech-item h3{color:#fff;font-size:.95rem;margin-bottom:4px}
         .mech-item p{color:#b0a8c8;font-size:.85rem;line-height:1.45}
+        .mech-ball{display:flex;align-items:center;gap:12px}
+        .mech-icon{width:68px;height:68px;flex:none}
         #guide-close{width:100%;margin-top:16px;background:linear-gradient(135deg,#5b8def,#7c4dff);border:none;border-radius:50px;padding:13px;color:#fff;font-size:1rem;font-weight:700;cursor:pointer}
         #guide-screen{position:absolute;inset:0;background:rgba(8,6,20,.94);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:35;padding:28px;text-align:center;backdrop-filter:blur(12px)}
         #guide-screen h2{color:#ff6b9d;font-size:1.7rem;margin-bottom:20px;font-weight:700}
@@ -147,11 +149,12 @@
     <div id="mechanics-guide">
         <div class="guide-box">
             <h2>Guia de Mecânicas</h2>
-            <div class="mech-item"><h3>Bomba</h3><p>Explode e destrói as bolas próximas quando encosta em qualquer uma.</p></div>
-            <div class="mech-item"><h3>Bola Arco-íris</h3><p>Se funde com qualquer bola, criando uma do próximo nível.</p></div>
-            <div class="mech-item"><h3>Bola Espelho (Fase 3)</h3><p>Ao tocar em outra bola, copia o nível dela e se transforma na mesma.</p></div>
+            <div class="mech-item mech-ball"><canvas class="mech-icon" data-special="bomb" width="96" height="96"></canvas><div><h3>Bomba</h3><p>Explode e destrói as bolas próximas quando encosta em qualquer uma.</p></div></div>
+            <div class="mech-item mech-ball"><canvas class="mech-icon" data-special="rainbow" width="96" height="96"></canvas><div><h3>Bola Arco-íris</h3><p>Se funde com qualquer bola, criando uma do próximo nível.</p></div></div>
+            <div class="mech-item mech-ball"><canvas class="mech-icon" data-special="mirror" width="96" height="96"></canvas><div><h3>Bola Espelho (Fases 3 a 6)</h3><p>Ao tocar em outra bola, copia o nível dela e se transforma na mesma.</p></div></div>
             <div class="mech-item"><h3>Crescimento em Cadeia (Fase 3)</h3><p>Ao fazer um merge de nível 8 ou superior, 50% de chance de todas as bolas do mesmo nível na tela subirem +1 nível.</p></div>
-            <div class="mech-item"><h3>Bola Prisma (Fases 4 a 6)</h3><p>Cai onde você escolher. Ao acertar bolas, faz merge e remove as atingidas. Os pontos contam normalmente. Nas fases 5 e 6 ela aparece com mais frequência.</p></div>
+            <div class="mech-item mech-ball"><canvas class="mech-icon" data-special="resonance" width="96" height="96"></canvas><div><h3>Bola Ressonância (Fases 5 e 6)</h3><p>Ao encostar em uma bola, faz sumir todas as bolas do mesmo nível que ela. Você ganha os pontos como se todas tivessem se fundido.</p></div></div>
+            <div class="mech-item mech-ball"><canvas class="mech-icon" data-special="prism" width="96" height="96"></canvas><div><h3>Bola Prisma (Fases 4 a 6)</h3><p>Cai onde você escolher. Ao acertar bolas, faz merge e remove as atingidas. Os pontos contam normalmente. Nas fases 5 e 6 ela aparece com mais frequência.</p></div></div>
             <div class="mech-item"><h3>Evolução Temática (Fase 5)</h3><p>Cada nível de bola tem um tema e um visual próprios. Ao fundir, a bola se transforma no próximo tema.</p></div>
             <div class="mech-item"><h3>Cosmos (Fase 6)</h3><p>Cada nível é um corpo celeste, de poeira estelar até galáxias. A estrela de nêutrons, o pulsar e a galáxia têm animação.</p></div>
             <div class="mech-item"><h3>Pontuação por Fase</h3><p>Fase 1 = x1 | Fase 2 = x2 | Fase 3 = x3 | Fase 4 = x4 | Fase 5 = x5 | Fase 6 = x6</p></div>
@@ -182,15 +185,19 @@ const CONFIG = {
     dangerFrames: 150,
     graceFrames: 60,
     dangerDecay: 2,
-    specialChance: 0.09,
+    specialChances: {
+        1: {rainbow: 0.05, bomb: 0.06},
+        2: {rainbow: 0.05, bomb: 0.06},
+        3: {rainbow: 0.05, bomb: 0.06, mirror: 0.0315},
+        4: {rainbow: 0.07, bomb: 0.06, prism: 0.0315, mirror: 0.0315},
+        5: {rainbow: 0.07, bomb: 0.06, prism: 0.063, mirror: 0.0315, resonance: 0.08},
+        6: {rainbow: 0.07, bomb: 0.06, prism: 0.063, mirror: 0.0315, resonance: 0.08}
+    },
     phase2Unlock: 50000,
     phase3Unlock: 75000,
     phase4Unlock: 100000,
     phase5Unlock: 380000,
-    phase6Unlock: 440000,
-    latePrismChance: 0.063,
-    lateBombChance: 0.036,
-    lateRainbowChance: 0.033
+    phase6Unlock: 440000
 };
 
 // ================================================================
@@ -333,7 +340,7 @@ function playBomb() {
 // CANVAS
 // ================================================================
 const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d", {alpha: false});
+let ctx = canvas.getContext("2d", {alpha: false});
 let W = 0, H = 0;
 
 // ================================================================
@@ -458,6 +465,9 @@ class Ball {
         } else if (this.special === "prism") {
             this.r = 24;
             this.color = "#E0F2FE";
+        } else if (this.special === "resonance") {
+            this.r = 25;
+            this.color = "#8B5CF6";
         } else {
             this.r = LEVELS[level].radius;
             this.color = LEVELS[level].color;
@@ -500,6 +510,12 @@ class Ball {
         // Corpos celestes exclusivos da Fase 6 (sprites em cache).
         if (currentPhase === 6 && !this.special) {
             drawPhase6Ball(this.x, this.y, this.r, this.level);
+            return;
+        }
+
+        // Bola Ressonância: sprite em cache com ondas animadas por cima.
+        if (this.special === "resonance") {
+            drawResonanceBall(this.x, this.y, this.r);
             return;
         }
 
@@ -2395,6 +2411,128 @@ function getStarfield() {
 }
 
 // ================================================================
+// BOLA RESSONÂNCIA — ESPECIAL DAS FASES 5 E 6
+// ================================================================
+// Ao encostar numa bola, faz sumir todas as bolas do mesmo nível dela.
+// O corpo é desenhado uma vez (sprite) e as ondas de energia são animadas
+// por cima a cada quadro.
+let resonanceSprite = null;
+
+function paintResonance(g) {
+    // Esfera índigo profunda.
+    const body = g.createRadialGradient(-0.3, -0.35, 0.05, 0, 0, 1.05);
+    body.addColorStop(0, "#8b5cff");
+    body.addColorStop(0.5, "#3b1aa0");
+    body.addColorStop(1, "#0c052e");
+    g.fillStyle = body;
+    g.fillRect(-1.1, -1.1, 2.2, 2.2);
+
+    // Raios finos de vibração saindo do núcleo.
+    for (let k = 0; k < 12; k++) {
+        const a = k * Math.PI / 6 + 0.13;
+        g.beginPath();
+        g.moveTo(Math.cos(a) * 0.12, Math.sin(a) * 0.12);
+        g.lineTo(Math.cos(a) * 1.05, Math.sin(a) * 1.05);
+        g.strokeStyle = "rgba(210,170,255,0.2)";
+        g.lineWidth = 0.025;
+        g.stroke();
+    }
+
+    // Anéis concêntricos, do magenta ao azul-claro.
+    for (let i = 1; i <= 5; i++) {
+        g.beginPath();
+        g.arc(0, 0, i * 0.17, 0, Math.PI * 2);
+        g.strokeStyle = hsl(285 - i * 14, 100, 76, 0.7 - i * 0.09);
+        g.lineWidth = 0.04;
+        g.stroke();
+    }
+
+    // Núcleo luminoso.
+    const core = g.createRadialGradient(0, 0, 0, 0, 0, 0.46);
+    core.addColorStop(0, "rgba(255,255,255,1)");
+    core.addColorStop(0.35, "rgba(238,214,255,0.85)");
+    core.addColorStop(1, "rgba(190,130,255,0)");
+    g.fillStyle = core;
+    g.beginPath();
+    g.arc(0, 0, 0.46, 0, Math.PI * 2);
+    g.fill();
+
+    p5Star(g, 0, 0, 0.34, 0.9);
+}
+
+function getResonanceSprite() {
+    if (resonanceSprite) return resonanceSprite;
+
+    const r = 25;
+    const size = r * 2 * PHASE5_SPRITE_SCALE;
+    const half = size / 2;
+    resonanceSprite = document.createElement("canvas");
+    resonanceSprite.width = size;
+    resonanceSprite.height = size;
+
+    const g = resonanceSprite.getContext("2d");
+    g.setTransform(half, 0, 0, half, half, half);
+    g.beginPath();
+    g.arc(0, 0, 1, 0, Math.PI * 2);
+    g.clip();
+
+    paintResonance(g);
+    paintPhase5Finish(g, {gloss: 0.8, limb: 0.7});
+
+    // Borda luminosa por cima do acabamento.
+    g.beginPath();
+    g.arc(0, 0, 0.94, 0, Math.PI * 2);
+    g.strokeStyle = "rgba(225,180,255,0.85)";
+    g.lineWidth = 0.05;
+    g.stroke();
+    return resonanceSprite;
+}
+
+function drawResonanceBall(x, y, r) {
+    const t = Date.now() / 1000;
+
+    // Halo de energia em volta da bola, para destacá-la das outras.
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    const halo = ctx.createRadialGradient(x, y, r * 0.8, x, y, r * 1.6);
+    halo.addColorStop(0, "rgba(170,90,255," + (0.35 + 0.15 * Math.sin(t * 5)) + ")");
+    halo.addColorStop(1, "rgba(170,90,255,0)");
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(x, y, r * 1.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(getResonanceSprite(), x - r, y - r, r * 2, r * 2);
+
+    // Ondas de ressonância se expandindo a partir do núcleo.
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, r * 0.96, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.globalCompositeOperation = "lighter";
+
+    for (let i = 0; i < 3; i++) {
+        const p = (t * 0.9 + i / 3) % 1;
+        ctx.beginPath();
+        ctx.arc(x, y, r * (0.12 + 0.85 * p), 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(235,195,255," + (0.9 * (1 - p)) + ")";
+        ctx.lineWidth = Math.max(1, r * 0.07 * (1 - p * 0.5));
+        ctx.stroke();
+    }
+
+    const pulse = 0.5 + 0.5 * Math.sin(t * 7);
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 0.5);
+    glow.addColorStop(0, "rgba(255,255,255," + (0.3 + 0.35 * pulse) + ")");
+    glow.addColorStop(1, "rgba(200,140,255,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    ctx.restore();
+}
+
+// ================================================================
 // RESIZE
 // ================================================================
 function resize() {
@@ -2409,19 +2547,20 @@ function resize() {
 // ================================================================
 // GERA BOLA
 // ================================================================
-function generateBallData() {
-    let special = null;
-    const roll = Math.random();
-    if (currentPhase >= 5) {
-        // Fases 5 e 6: prisma com o dobro da chance da fase 4 e mais bombas.
-        if (roll < CONFIG.latePrismChance) special = "prism";
-        else if (roll < CONFIG.latePrismChance + CONFIG.lateBombChance) special = "bomb";
-        else if (roll < CONFIG.latePrismChance + CONFIG.lateBombChance + CONFIG.lateRainbowChance) special = "rainbow";
-    } else if (roll < CONFIG.specialChance) {
-        if (currentPhase === 4 && Math.random() < 0.35) special = "prism";
-        else if (currentPhase === 3 && Math.random() < 0.35) special = "mirror";
-        else special = Math.random() < 0.55 ? "rainbow" : "bomb";
+// Sorteia a bola especial da fase atual (ou nenhuma) com as chances do CONFIG.
+function pickSpecial() {
+    const chances = CONFIG.specialChances[currentPhase];
+    let roll = Math.random();
+
+    for (const type in chances) {
+        if (roll < chances[type]) return type;
+        roll -= chances[type];
     }
+    return null;
+}
+
+function generateBallData() {
+    const special = pickSpecial();
 
     let maxLevel = 3;
     if (score > 200) maxLevel = 4;
@@ -2454,6 +2593,7 @@ function updatePreview() {
     else if (nextSpecial === "bomb") elNext.style.background = "#222";
     else if (nextSpecial === "mirror") elNext.style.background = "linear-gradient(135deg,#F8FAFC,#94A3B8)";
     else if (nextSpecial === "prism") elNext.style.background = "linear-gradient(135deg,#F0F9FF,#0EA5E9)";
+    else if (nextSpecial === "resonance") elNext.style.background = "radial-gradient(circle at 50% 50%,#ffffff 0%,#c084fc 35%,#4c1d95 100%)";
     else if (currentPhase === 5) elNext.style.background = "url(" + getPhase5Preview(nextLevel) + ") center / cover no-repeat";
     else if (currentPhase === 6) elNext.style.background = "url(" + getPhase6Preview(nextLevel) + ") center / cover no-repeat";
     else elNext.style.background = LEVELS[nextLevel].color;
@@ -2530,6 +2670,10 @@ function physics() {
 
             let doMerge = false, type = null;
             if (a.special === "bomb" || b.special === "bomb") { doMerge = true; type = "bomb"; }
+            else if (a.special && b.special) {
+                // Duas bolas especiais (exceto a bomba) apenas se empurram, sem efeito.
+            }
+            else if (a.special === "resonance" || b.special === "resonance") { doMerge = true; type = "resonance"; }
             else if (a.special === "rainbow" || b.special === "rainbow") { doMerge = true; type = "rainbow"; }
             else if (a.special === "mirror" || b.special === "mirror") { doMerge = true; type = "mirror"; }
             else if (a.special === "prism" || b.special === "prism") { doMerge = true; type = "prism"; }
@@ -2538,6 +2682,7 @@ function physics() {
             if (doMerge) {
                 mergedThisFrame = true;
                 if (type === "bomb") doBomb(a.special === "bomb" ? a : b);
+                else if (type === "resonance") doResonance(a, b);
                 else if (type === "rainbow") doRainbow(a, b);
                 else if (type === "mirror") doMirror(a, b);
                 else if (type === "prism") doPrism(a, b);
@@ -2612,6 +2757,31 @@ function doPrism(a, b) {
     }
     spawn(nx, ny, "#7DD3FC", 10);
     shake = Math.max(shake, 5);
+    playPop();
+}
+
+function doResonance(a, b) {
+    const reso = a.special === "resonance" ? a : b;
+    const other = reso === a ? b : a;
+    reso.alive = false;
+
+    // Todas as bolas normais do mesmo nível da que foi tocada somem.
+    const level = other.level;
+    const targets = balls.filter(function(o) {
+        return o.alive && !o.special && o.level === level;
+    });
+    for (let i = 0; i < targets.length; i++) {
+        targets[i].alive = false;
+        spawn(targets[i].x, targets[i].y, targets[i].color, 4);
+    }
+
+    // Pontos de fusão: uma fusão para cada par de bolas removidas.
+    const merged = Math.min(level + 1, LEVELS.length - 1);
+    const pairs = Math.ceil(targets.length / 2);
+    for (let i = 0; i < pairs; i++) addScore(LEVELS[merged].score);
+
+    spawn(reso.x, reso.y, "#c4a4ff", 12);
+    shake = Math.max(shake, 6);
     playPop();
 }
 
@@ -3093,6 +3263,47 @@ function loop(now) {
 }
 
 // ================================================================
+// ÍCONES DO GUIA DE MECÂNICAS
+// ================================================================
+// Cada bola especial do guia é desenhada com o mesmo código do jogo.
+let guideIconsRunning = false;
+
+function drawGuideIcons() {
+    const mainCtx = ctx;
+    const icons = document.querySelectorAll(".mech-icon");
+
+    try {
+        for (let i = 0; i < icons.length; i++) {
+            const g = icons[i].getContext("2d");
+            g.setTransform(1, 0, 0, 1, 0, 0);
+            g.clearRect(0, 0, icons[i].width, icons[i].height);
+            g.setTransform(1.2, 0, 0, 1.2, 0, 0);
+
+            ctx = g;
+            new Ball(40, 40, 0, icons[i].dataset.special).draw();
+        }
+    } finally {
+        ctx = mainCtx;
+    }
+}
+
+function guideIconLoop() {
+    if (elMechanicsGuide.style.display !== "flex") {
+        guideIconsRunning = false;
+        return;
+    }
+
+    drawGuideIcons();
+    requestAnimationFrame(guideIconLoop);
+}
+
+function startGuideIcons() {
+    if (guideIconsRunning) return;
+    guideIconsRunning = true;
+    guideIconLoop();
+}
+
+// ================================================================
 // INPUT
 // ================================================================
 function getX(e) {
@@ -3113,6 +3324,7 @@ elGuideBtn.addEventListener("click", function(){
     localStorage.setItem("sc_guide", "1");
     elHint.style.display = "block";
     elMechanicsGuide.style.display = "flex";
+    startGuideIcons();
 });
 elMenuBtn.addEventListener("click", openMenu);
 elMenuClose.addEventListener("click", closeMenu);
@@ -3127,7 +3339,7 @@ elBtnPhase3.addEventListener("click", function(){ if(!phase3Unlocked) return; if
 elBtnPhase4.addEventListener("click", function(){ if(!phase4Unlocked) return; if(currentPhase===4){closeMenu();return;} setPhase(4); closeMenu(); });
 elBtnPhase5.addEventListener("click", function(){ if(!phase5Unlocked) return; if(currentPhase===5){closeMenu();return;} setPhase(5); closeMenu(); });
 elBtnPhase6.addEventListener("click", function(){ if(!phase6Unlocked) return; if(currentPhase===6){closeMenu();return;} setPhase(6); closeMenu(); });
-elMenuGuideBtn.addEventListener("click", function(){ closeMenu(); elMechanicsGuide.style.display = "flex"; });
+elMenuGuideBtn.addEventListener("click", function(){ closeMenu(); elMechanicsGuide.style.display = "flex"; startGuideIcons(); });
 elGuideClose.addEventListener("click", function(){ elMechanicsGuide.style.display = "none"; prepare(lastX); });
 
 // ================================================================
