@@ -12,11 +12,13 @@
         #game-container.phase-3{background:radial-gradient(ellipse at 50% 0%,#1a0a1a 0%,#0d0610 70%)}
         #game-container.phase-4{background:radial-gradient(ellipse at 50% 0%,#93c5fd 0%,#60a5fa 45%,#3b82f6 100%)}
         #game-container.phase-5{background:radial-gradient(ellipse at 50% 0%,#3b4a63 0%,#1e293b 50%,#0b1220 100%)}
+        #game-container.phase-6{background:radial-gradient(ellipse at 50% 0%,#2a1250 0%,#0d0925 50%,#02030a 100%)}
         #gameCanvas{display:block;border-radius:16px;box-shadow:0 0 60px rgba(120,80,255,.12),inset 0 0 0 1px rgba(255,255,255,.04);touch-action:none;background:rgba(255,255,255,.02)}
         #game-container.phase-2 #gameCanvas{box-shadow:0 0 60px rgba(45,212,191,.12),inset 0 0 0 1px rgba(255,255,255,.04)}
         #game-container.phase-3 #gameCanvas{box-shadow:0 0 60px rgba(190,24,93,.15),inset 0 0 0 1px rgba(255,255,255,.04)}
         #game-container.phase-4 #gameCanvas{box-shadow:0 0 50px rgba(59,130,246,.15),inset 0 0 0 1px rgba(255,255,255,.12)}
         #game-container.phase-5 #gameCanvas{box-shadow:0 0 60px rgba(251,191,36,.14),inset 0 0 0 1px rgba(255,255,255,.08)}
+        #game-container.phase-6 #gameCanvas{box-shadow:0 0 70px rgba(139,92,246,.22),inset 0 0 0 1px rgba(255,255,255,.06)}
         #ui-top{position:absolute;top:14px;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:0 18px;z-index:10;pointer-events:none}
         .ui-box{background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:14px;padding:9px 16px;color:#fff;font-size:14px;font-weight:600;letter-spacing:.3px;border:1px solid rgba(255,255,255,.07)}
         #left-ui{display:flex;flex-direction:column;gap:6px;pointer-events:auto}
@@ -126,6 +128,7 @@
                 <div class="menu-record-row"><span class="label">Recorde Fase 3</span><span class="value" id="menu-rec-3">0</span></div>
                 <div class="menu-record-row"><span class="label">Recorde Fase 4</span><span class="value" id="menu-rec-4">0</span></div>
                 <div class="menu-record-row"><span class="label">Recorde Fase 5</span><span class="value" id="menu-rec-5">0</span></div>
+                <div class="menu-record-row"><span class="label">Recorde Fase 6</span><span class="value" id="menu-rec-6">0</span></div>
                 <div class="menu-record-row total"><span class="label">Recorde Total</span><span class="value" id="menu-rec-total">0</span></div>
             </div>
             <div class="menu-phases">
@@ -134,6 +137,7 @@
                 <button class="phase-btn locked" id="btn-phase3"><span>Fase 3</span><span class="lock-text">Bloqueada</span></button>
                 <button class="phase-btn locked" id="btn-phase4"><span>Fase 4</span><span class="lock-text">Bloqueada</span></button>
                 <button class="phase-btn locked" id="btn-phase5"><span>Fase 5</span><span class="lock-text">Bloqueada</span></button>
+                <button class="phase-btn locked" id="btn-phase6"><span>Fase 6</span><span class="lock-text">Bloqueada</span></button>
             </div>
             <button id="menu-guide-btn">Guia de Mecânicas</button>
             <button id="menu-close">Fechar</button>
@@ -147,9 +151,10 @@
             <div class="mech-item"><h3>Bola Arco-íris</h3><p>Se funde com qualquer bola, criando uma do próximo nível.</p></div>
             <div class="mech-item"><h3>Bola Espelho (Fase 3)</h3><p>Ao tocar em outra bola, copia o nível dela e se transforma na mesma.</p></div>
             <div class="mech-item"><h3>Crescimento em Cadeia (Fase 3)</h3><p>Ao fazer um merge de nível 8 ou superior, 50% de chance de todas as bolas do mesmo nível na tela subirem +1 nível.</p></div>
-            <div class="mech-item"><h3>Bola Prisma (Fase 4)</h3><p>Cai onde você escolher. Ao acertar bolas, faz merge e remove as atingidas. Os pontos contam normalmente.</p></div>
+            <div class="mech-item"><h3>Bola Prisma (Fases 4 a 6)</h3><p>Cai onde você escolher. Ao acertar bolas, faz merge e remove as atingidas. Os pontos contam normalmente. Nas fases 5 e 6 ela aparece com mais frequência.</p></div>
             <div class="mech-item"><h3>Evolução Temática (Fase 5)</h3><p>Cada nível de bola tem um tema e um visual próprios. Ao fundir, a bola se transforma no próximo tema.</p></div>
-            <div class="mech-item"><h3>Pontuação por Fase</h3><p>Fase 1 = x1 | Fase 2 = x2 | Fase 3 = x3 | Fase 4 = x4 | Fase 5 = x5</p></div>
+            <div class="mech-item"><h3>Cosmos (Fase 6)</h3><p>Cada nível é um corpo celeste, de poeira estelar até galáxias. A estrela de nêutrons, o pulsar e a galáxia têm animação.</p></div>
+            <div class="mech-item"><h3>Pontuação por Fase</h3><p>Fase 1 = x1 | Fase 2 = x2 | Fase 3 = x3 | Fase 4 = x4 | Fase 5 = x5 | Fase 6 = x6</p></div>
             <button id="guide-close">Entendi</button>
         </div>
     </div>
@@ -181,7 +186,11 @@ const CONFIG = {
     phase2Unlock: 50000,
     phase3Unlock: 75000,
     phase4Unlock: 100000,
-    phase5Unlock: 380000
+    phase5Unlock: 380000,
+    phase6Unlock: 440000,
+    latePrismChance: 0.063,
+    lateBombChance: 0.036,
+    lateRainbowChance: 0.033
 };
 
 // ================================================================
@@ -274,6 +283,24 @@ const LEVELS_P5 = [
     {radius:132,color:"#7AA8FF",score:16384}
 ];
 
+const LEVELS_P6 = [
+    {radius:15,color:"#B79CFF",score:1},
+    {radius:19,color:"#8A7F78",score:2},
+    {radius:23,color:"#D8D8D4",score:4},
+    {radius:28,color:"#C1440E",score:8},
+    {radius:33,color:"#E3B567",score:16},
+    {radius:39,color:"#2E7BD6",score:32},
+    {radius:45,color:"#3552D6",score:64},
+    {radius:52,color:"#C99560",score:128},
+    {radius:60,color:"#E2CC8F",score:256},
+    {radius:70,color:"#FFB020",score:512},
+    {radius:82,color:"#7CD3FF",score:1024},
+    {radius:94,color:"#FF5FD8",score:2048},
+    {radius:108,color:"#C04CE0",score:4096},
+    {radius:120,color:"#FF8A1A",score:8192},
+    {radius:132,color:"#7FA2FF",score:16384}
+];
+
 let LEVELS = LEVELS_P1;
 
 // ================================================================
@@ -322,16 +349,19 @@ let highScore2 = parseInt(localStorage.getItem("sc_high_2") || "0");
 let highScore3 = parseInt(localStorage.getItem("sc_high_3") || "0");
 let highScore4 = parseInt(localStorage.getItem("sc_high_4") || "0");
 let highScore5 = parseInt(localStorage.getItem("sc_high_5") || "0");
+let highScore6 = parseInt(localStorage.getItem("sc_high_6") || "0");
 
 let phase2Unlocked = localStorage.getItem("sc_unlocked_2") === "1" || localStorage.getItem("sc_dev") === "1";
 let phase3Unlocked = localStorage.getItem("sc_unlocked_3") === "1" || localStorage.getItem("sc_dev") === "1";
 let phase4Unlocked = localStorage.getItem("sc_unlocked_4") === "1" || localStorage.getItem("sc_dev") === "1";
 let phase5Unlocked = localStorage.getItem("sc_unlocked_5") === "1" || localStorage.getItem("sc_dev") === "1";
+let phase6Unlocked = localStorage.getItem("sc_unlocked_6") === "1" || localStorage.getItem("sc_dev") === "1";
 
 let unlockShown2 = false;
 let unlockShown3 = false;
 let unlockShown4 = false;
 let unlockShown5 = false;
+let unlockShown6 = false;
 let pendingUnlockPhase = 0;
 
 let heldLevel = 0, heldSpecial = null;
@@ -375,11 +405,13 @@ const elBtnPhase2 = document.getElementById("btn-phase2");
 const elBtnPhase3 = document.getElementById("btn-phase3");
 const elBtnPhase4 = document.getElementById("btn-phase4");
 const elBtnPhase5 = document.getElementById("btn-phase5");
+const elBtnPhase6 = document.getElementById("btn-phase6");
 const elMenuRec1 = document.getElementById("menu-rec-1");
 const elMenuRec2 = document.getElementById("menu-rec-2");
 const elMenuRec3 = document.getElementById("menu-rec-3");
 const elMenuRec4 = document.getElementById("menu-rec-4");
 const elMenuRec5 = document.getElementById("menu-rec-5");
+const elMenuRec6 = document.getElementById("menu-rec-6");
 const elMenuRecTotal = document.getElementById("menu-rec-total");
 const elContainer = document.getElementById("game-container");
 const elMenuGuideBtn = document.getElementById("menu-guide-btn");
@@ -394,6 +426,7 @@ function getScoreMultiplier() {
     if (currentPhase === 3) return 3;
     if (currentPhase === 4) return 4;
     if (currentPhase === 5) return 5;
+    if (currentPhase === 6) return 6;
     return 1;
 }
 
@@ -461,6 +494,12 @@ class Ball {
         // Esferas temáticas exclusivas da Fase 5 (sprites em cache).
         if (currentPhase === 5 && !this.special) {
             drawPhase5Ball(this.x, this.y, this.r, this.level);
+            return;
+        }
+
+        // Corpos celestes exclusivos da Fase 6 (sprites em cache).
+        if (currentPhase === 6 && !this.special) {
+            drawPhase6Ball(this.x, this.y, this.r, this.level);
             return;
         }
 
@@ -1451,6 +1490,911 @@ function drawPhase5Ball(x, y, r, level) {
 }
 
 // ================================================================
+// FASE 6 — COSMOS: CORPOS CELESTES DESENHADOS NO CANVAS
+// ================================================================
+// Mesma técnica da Fase 5: cada nível é desenhado uma vez num sprite e depois
+// só copiado. Aqui a vista é ortográfica (como uma foto de telescópio): as
+// manchas e crateras são achatadas perto da borda para parecerem esféricas.
+const PHASE6_SPRITE_SCALE = 2;
+const phase6Sprites = [];
+const phase6Previews = [];
+let starfield = null;
+
+function p6Background(g, color) {
+    g.fillStyle = color;
+    g.fillRect(-1.6, -1.6, 3.2, 3.2);
+}
+
+function p6Dot(g, x, y, rad, fill) {
+    g.beginPath();
+    g.arc(x, y, rad, 0, Math.PI * 2);
+    g.fillStyle = fill;
+    g.fill();
+}
+
+// Ponto aleatório dentro do disco, com distância máxima do centro.
+function p6Point(rand, maxDist) {
+    const a = rand() * Math.PI * 2;
+    const d = Math.sqrt(rand()) * maxDist;
+    return [Math.cos(a) * d, Math.sin(a) * d];
+}
+
+// Mancha circular achatada na direção radial, como numa esfera vista de fora.
+function p6Spot(g, x, y, rad, fill) {
+    const d = Math.hypot(x, y);
+    const nz = Math.sqrt(Math.max(0.06, 1 - d * d));
+
+    g.beginPath();
+    g.ellipse(x, y, rad * nz, rad, Math.atan2(y, x), 0, Math.PI * 2);
+    g.fillStyle = fill;
+    g.fill();
+}
+
+// Várias manchas unidas num só preenchimento, para não aparecerem círculos.
+function p6Spots(g, list, fill) {
+    g.beginPath();
+    for (const m of list) {
+        const d = Math.hypot(m[0], m[1]);
+        const nz = Math.sqrt(Math.max(0.06, 1 - d * d));
+        const rot = Math.atan2(m[1], m[0]);
+
+        g.moveTo(m[0] + m[2] * nz * Math.cos(rot), m[1] + m[2] * nz * Math.sin(rot));
+        g.ellipse(m[0], m[1], m[2] * nz, m[2], rot, 0, Math.PI * 2);
+    }
+    g.fillStyle = fill;
+    g.fill();
+}
+
+// Cratera: borda iluminada no lado oposto à luz e piso escuro.
+function p6Crater(g, x, y, rad, tone) {
+    const d = Math.hypot(x, y);
+    const nz = Math.sqrt(Math.max(0.06, 1 - d * d));
+    const rot = Math.atan2(y, x);
+
+    g.beginPath();
+    g.ellipse(x + rad * 0.14, y + rad * 0.16, rad * nz, rad, rot, 0, Math.PI * 2);
+    g.fillStyle = "rgba(255,246,232,0.5)";
+    g.fill();
+
+    g.beginPath();
+    g.ellipse(x, y, rad * nz * 0.94, rad * 0.94, rot, 0, Math.PI * 2);
+    g.fillStyle = "rgba(" + tone + ",0.62)";
+    g.fill();
+}
+
+function p6Sphere(g, light, mid, dark) {
+    const grad = g.createRadialGradient(-0.35, -0.4, 0.05, 0, 0, 1.05);
+    grad.addColorStop(0, light);
+    grad.addColorStop(0.55, mid);
+    grad.addColorStop(1, dark);
+    g.fillStyle = grad;
+    g.fillRect(-1.1, -1.1, 2.2, 2.2);
+}
+
+// Faixa horizontal ondulada, levemente curva como os paralelos de um planeta.
+function p6Band(g, y0, y1, amp, phase, fill) {
+    const steps = 44;
+
+    g.beginPath();
+    for (let i = 0; i <= steps; i++) {
+        const x = -1.1 + i * 0.05;
+        const yy = y0 + Math.sin(x * 3 + phase) * amp + x * x * 0.14;
+        if (i === 0) g.moveTo(x, yy);
+        else g.lineTo(x, yy);
+    }
+    for (let i = steps; i >= 0; i--) {
+        const x = -1.1 + i * 0.05;
+        g.lineTo(x, y1 + Math.sin(x * 3 + phase + 0.6) * amp + x * x * 0.14);
+    }
+    g.closePath();
+    g.fillStyle = fill;
+    g.fill();
+}
+
+// Nuvem macia: gradiente radial esticado e girado.
+function p6Cloud(g, x, y, rad, stretch, rot, color, alpha) {
+    g.save();
+    g.translate(x, y);
+    g.rotate(rot);
+    g.scale(stretch, 1);
+
+    const grad = g.createRadialGradient(0, 0, 0, 0, 0, rad);
+    grad.addColorStop(0, "rgba(" + color + "," + alpha + ")");
+    grad.addColorStop(1, "rgba(" + color + ",0)");
+    g.fillStyle = grad;
+    g.beginPath();
+    g.arc(0, 0, rad, 0, Math.PI * 2);
+    g.fill();
+    g.restore();
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 1 — POEIRA ESTELAR
+// ----------------------------------------------------------------
+function paintStardust(g, rand) {
+    const core = g.createRadialGradient(-0.1, -0.1, 0, 0, 0, 1);
+    core.addColorStop(0, "#f4ecff");
+    core.addColorStop(0.3, "#a98bf5");
+    core.addColorStop(0.7, "#432093");
+    core.addColorStop(1, "#150a3a");
+    g.fillStyle = core;
+    g.fillRect(-1.1, -1.1, 2.2, 2.2);
+
+    // Grãos de poeira brilhando em cores diferentes.
+    const hues = [190, 300, 50, 260];
+    for (let i = 0; i < 64; i++) {
+        const p = p6Point(rand, 0.95);
+        p6Dot(g, p[0], p[1], 0.02 + rand() * 0.045, hsl(hues[i % 4], 90, 78, 0.5 + rand() * 0.5));
+    }
+
+    p5Star(g, -0.3, -0.35, 0.34, 0.95);
+    p5Star(g, 0.42, 0.3, 0.22, 0.8);
+    p5Star(g, 0.25, -0.55, 0.14, 0.7);
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 2 — ASTEROIDE
+// ----------------------------------------------------------------
+function paintAsteroid(g, rand) {
+    p6Sphere(g, "#aaa097", "#6e655d", "#2d2824");
+
+    for (let i = 0; i < 150; i++) {
+        const p = p6Point(rand, 0.98);
+        const dark = rand() < 0.5;
+        p6Dot(g, p[0], p[1], 0.012 + rand() * 0.03, dark ? "rgba(30,24,20,0.35)" : "rgba(225,215,205,0.22)");
+    }
+
+    const craters = [[-0.35, -0.15, 0.3], [0.3, -0.42, 0.2], [0.05, 0.36, 0.26],
+                     [0.52, 0.2, 0.15], [-0.45, 0.46, 0.17], [-0.05, -0.62, 0.12], [0.62, -0.1, 0.1]];
+    for (const c of craters) p6Crater(g, c[0], c[1], c[2], "28,22,20");
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 3 — LUA
+// ----------------------------------------------------------------
+function paintMoon(g, rand) {
+    p6Sphere(g, "#f4f4f0", "#bdbdb9", "#5b5b5e");
+
+    // Mares lunares: manchas escuras e irregulares, unidas numa só forma.
+    p6Spots(g, [[-0.35, -0.2, 0.42], [-0.15, -0.05, 0.3], [0.1, -0.45, 0.3],
+                [0.32, 0.1, 0.28], [-0.1, 0.25, 0.22], [0.48, -0.22, 0.2], [-0.55, 0.2, 0.18]],
+            "rgba(88,98,114,0.5)");
+
+    for (let i = 0; i < 70; i++) {
+        const p = p6Point(rand, 0.98);
+        p6Dot(g, p[0], p[1], 0.01 + rand() * 0.025, rand() < 0.5 ? "rgba(60,60,66,0.25)" : "rgba(255,255,255,0.3)");
+    }
+
+    for (let i = 0; i < 10; i++) {
+        const p = p6Point(rand, 0.85);
+        p6Crater(g, p[0], p[1], 0.05 + rand() * 0.11, "62,62,70");
+    }
+
+    // Cratera grande com raios claros, como a Tycho.
+    p6Crater(g, 0.2, 0.5, 0.13, "70,70,78");
+    for (let k = 0; k < 8; k++) {
+        const a = k * Math.PI / 4 + 0.3;
+        g.beginPath();
+        g.moveTo(0.2 + Math.cos(a) * 0.14, 0.5 + Math.sin(a) * 0.14);
+        g.lineTo(0.2 + Math.cos(a) * 0.4, 0.5 + Math.sin(a) * 0.4);
+        g.strokeStyle = "rgba(255,255,255,0.28)";
+        g.lineWidth = 0.02;
+        g.stroke();
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 4 — MARTE
+// ----------------------------------------------------------------
+function paintMars(g, rand) {
+    p6Sphere(g, "#e8864c", "#b5441b", "#4a1a0a");
+
+    p6Spots(g, [[-0.2, 0.15, 0.34], [0.35, 0.3, 0.26], [-0.55, 0.4, 0.2], [0.1, -0.1, 0.2], [-0.4, -0.3, 0.16]],
+            "rgba(70,25,15,0.45)");
+
+    for (let i = 0; i < 90; i++) {
+        const p = p6Point(rand, 0.98);
+        p6Dot(g, p[0], p[1], 0.01 + rand() * 0.03, rand() < 0.5 ? "rgba(255,190,130,0.2)" : "rgba(60,20,10,0.25)");
+    }
+
+    // Vale gigante cortando a superfície.
+    g.beginPath();
+    g.moveTo(-0.5, 0.08);
+    g.bezierCurveTo(-0.2, -0.02, 0.1, 0.14, 0.45, 0.05);
+    g.strokeStyle = "rgba(55,18,8,0.7)";
+    g.lineWidth = 0.05;
+    g.lineCap = "round";
+    g.stroke();
+
+    for (let i = 0; i < 6; i++) {
+        const p = p6Point(rand, 0.8);
+        p6Crater(g, p[0], p[1], 0.06 + rand() * 0.06, "60,20,10");
+    }
+
+    // Calotas polares.
+    p6Spot(g, 0, -0.96, 0.46, "rgba(255,255,255,0.55)");
+    p6Spot(g, 0, -0.96, 0.34, "rgba(255,255,255,0.92)");
+    p6Spot(g, 0, 0.97, 0.3, "rgba(255,255,255,0.7)");
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 5 — VÊNUS
+// ----------------------------------------------------------------
+function paintVenus(g, rand) {
+    p6Sphere(g, "#fcebb8", "#dcae60", "#6b4414");
+
+    // Camadas de nuvens espessas, em ondas.
+    for (let k = -9; k <= 9; k++) {
+        g.beginPath();
+        for (let i = 0; i <= 44; i++) {
+            const x = -1.1 + i * 0.05;
+            const y = k * 0.12 + Math.sin(x * 3.2 + k * 0.9) * 0.06 + Math.sin(x * 7 + k) * 0.015;
+            if (i === 0) g.moveTo(x, y);
+            else g.lineTo(x, y);
+        }
+        g.strokeStyle = hsl(38 + (k & 1) * 8, 65, k % 3 === 0 ? 80 : 56, 0.42);
+        g.lineWidth = 0.08 + rand() * 0.04;
+        g.stroke();
+    }
+
+    // Redemoinhos de nuvens.
+    for (let i = 0; i < 12; i++) {
+        const p = p6Point(rand, 0.85);
+        p6Cloud(g, p[0], p[1], 0.18, 1.8, rand() * Math.PI, "255,248,215", 0.35);
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 6 — TERRA
+// ----------------------------------------------------------------
+function paintEarth(g, rand) {
+    p6Sphere(g, "#56b0ff", "#1b62c4", "#071c47");
+
+    // Continentes feitos de várias manchas sobrepostas.
+    const lands = [[-0.35, -0.15, 0.3], [0.28, 0.2, 0.26], [0.35, -0.45, 0.16], [-0.5, 0.5, 0.14]];
+    for (const land of lands) {
+        for (let i = 0; i < 9; i++) {
+            const px = land[0] + (rand() - 0.5) * land[2] * 1.8;
+            const py = land[1] + (rand() - 0.5) * land[2] * 1.8;
+            p6Spot(g, px, py, land[2] * (0.35 + rand() * 0.35), "#3f8f3b");
+        }
+        for (let i = 0; i < 4; i++) {
+            const px = land[0] + (rand() - 0.5) * land[2];
+            const py = land[1] + (rand() - 0.5) * land[2];
+            p6Spot(g, px, py, land[2] * 0.3, "rgba(196,164,90,0.65)");
+        }
+    }
+
+    // Gelo polar.
+    p6Spot(g, 0, -0.97, 0.5, "rgba(255,255,255,0.92)");
+    p6Spot(g, 0, 0.98, 0.4, "rgba(255,255,255,0.85)");
+
+    // Nuvens.
+    for (let i = 0; i < 16; i++) {
+        const p = p6Point(rand, 0.9);
+        p6Cloud(g, p[0], p[1], 0.14, 1.8 + rand(), rand() * Math.PI, "255,255,255", 0.75);
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 7 — NETUNO
+// ----------------------------------------------------------------
+function paintNeptune(g, rand) {
+    p6Sphere(g, "#78a2ff", "#2c49d6", "#0a1250");
+
+    for (let k = -5; k <= 5; k++) {
+        p6Band(g, k * 0.18 - 0.05, k * 0.18 + 0.05, 0.02, k * 0.8, hsl(225, 75, (k & 1) ? 64 : 38, 0.16));
+    }
+
+    // Grande Mancha Escura e nuvens brancas finas ao redor.
+    p6Spot(g, -0.25, 0.2, 0.32, "rgba(8,14,70,0.55)");
+    p6Spot(g, -0.25, 0.2, 0.22, "rgba(6,10,56,0.75)");
+    for (let i = 0; i < 6; i++) {
+        const x = -0.05 + rand() * 0.6, y = -0.1 + rand() * 0.6;
+        g.beginPath();
+        g.ellipse(x, y, 0.12 + rand() * 0.1, 0.014 + rand() * 0.01, -0.15 + rand() * 0.3, 0, Math.PI * 2);
+        g.fillStyle = "rgba(255,255,255,0.7)";
+        g.fill();
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 8 — JÚPITER
+// ----------------------------------------------------------------
+function paintJupiter(g, rand) {
+    p6Sphere(g, "#f3e6cb", "#c99560", "#4b2a14");
+
+    const bands = [["#e9d6b4", -1.1, -0.78], ["#b9763f", -0.78, -0.6], ["#f0dfc0", -0.6, -0.36],
+                   ["#9a5a30", -0.36, -0.2], ["#ecd9b8", -0.2, 0.0], ["#a8693a", 0.0, 0.18],
+                   ["#f2e4c8", 0.18, 0.4], ["#8a5128", 0.4, 0.55], ["#e3cfa8", 0.55, 0.78],
+                   ["#b07a48", 0.78, 1.1]];
+    bands.forEach(function(b, i) {
+        p6Band(g, b[1], b[2], 0.02 + (i % 3) * 0.008, i * 1.3, b[0]);
+    });
+
+    // Turbulência entre as faixas.
+    for (let i = 0; i < 26; i++) {
+        const x = (rand() * 2 - 1) * 0.85, y = (rand() * 2 - 1) * 0.9;
+        g.beginPath();
+        g.ellipse(x, y, 0.1 + rand() * 0.18, 0.012 + rand() * 0.014, 0, 0, Math.PI * 2);
+        g.fillStyle = rand() < 0.5 ? "rgba(255,240,215,0.38)" : "rgba(90,45,20,0.3)";
+        g.fill();
+    }
+
+    // Grande Mancha Vermelha.
+    g.beginPath();
+    g.ellipse(0.3, 0.3, 0.27, 0.15, 0, 0, Math.PI * 2);
+    g.fillStyle = "rgba(255,215,175,0.55)";
+    g.fill();
+    g.beginPath();
+    g.ellipse(0.3, 0.3, 0.22, 0.115, 0, 0, Math.PI * 2);
+    g.fillStyle = "#c4452d";
+    g.fill();
+    g.beginPath();
+    g.ellipse(0.31, 0.3, 0.1, 0.05, 0, 0, Math.PI * 2);
+    g.fillStyle = "#8f2a1b";
+    g.fill();
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 9 — SATURNO
+// ----------------------------------------------------------------
+// Metade do sistema de anéis: a de trás é desenhada antes do planeta e a da
+// frente depois, o que cria a ilusão de profundidade.
+function paintSaturnRings(g, back) {
+    const radii = [0.72, 0.8, 0.88, 0.96, 1.04];
+    const colors = ["#8f7c58", "#d8c494", "#ecdcae", "#3b3222", "#c9b682"];
+
+    g.save();
+    g.rotate(-0.32);
+    for (let i = 0; i < radii.length; i++) {
+        g.beginPath();
+        g.ellipse(0, 0, radii[i], radii[i] * 0.27, 0, back ? Math.PI : 0, back ? Math.PI * 2 : Math.PI);
+        g.strokeStyle = colors[i];
+        g.lineWidth = 0.075;
+        g.stroke();
+    }
+    g.restore();
+}
+
+function paintSaturn(g, rand) {
+    const space = g.createRadialGradient(0, 0, 0, 0, 0, 1.1);
+    space.addColorStop(0, "#1c1546");
+    space.addColorStop(1, "#06050f");
+    g.fillStyle = space;
+    g.fillRect(-1.6, -1.6, 3.2, 3.2);
+
+    for (let i = 0; i < 30; i++) {
+        const p = p6Point(rand, 1);
+        p6Dot(g, p[0], p[1], 0.008 + rand() * 0.012, "rgba(255,255,255," + (0.3 + rand() * 0.5) + ")");
+    }
+
+    paintSaturnRings(g, true);
+
+    g.save();
+    g.beginPath();
+    g.arc(0, 0, 0.58, 0, Math.PI * 2);
+    g.clip();
+
+    const body = g.createRadialGradient(-0.22, -0.25, 0.02, 0, 0, 0.64);
+    body.addColorStop(0, "#f8e6b4");
+    body.addColorStop(0.55, "#d9b872");
+    body.addColorStop(1, "#7a5c2a");
+    g.fillStyle = body;
+    g.fillRect(-0.7, -0.7, 1.4, 1.4);
+
+    for (let k = -5; k <= 5; k++) {
+        p6Band(g, k * 0.13 - 0.04, k * 0.13 + 0.04, 0.01, k, (k & 1) ? "rgba(150,110,50,0.3)" : "rgba(255,240,200,0.25)");
+    }
+
+    // Sombra dos anéis sobre o planeta.
+    g.save();
+    g.rotate(-0.32);
+    g.beginPath();
+    g.ellipse(0, 0.03, 0.68, 0.14, 0, 0, Math.PI);
+    g.strokeStyle = "rgba(40,28,10,0.45)";
+    g.lineWidth = 0.05;
+    g.stroke();
+    g.restore();
+    g.restore();
+
+    paintSaturnRings(g, false);
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 10 — SOL
+// ----------------------------------------------------------------
+function paintSun(g, rand) {
+    const base = g.createRadialGradient(0, 0, 0, 0, 0, 1);
+    base.addColorStop(0, "#fffbe2");
+    base.addColorStop(0.35, "#ffdc50");
+    base.addColorStop(0.7, "#ff8c1a");
+    base.addColorStop(1, "#c2330a");
+    g.fillStyle = base;
+    g.fillRect(-1.1, -1.1, 2.2, 2.2);
+
+    // Granulação da superfície.
+    for (let i = 0; i < 300; i++) {
+        const p = p6Point(rand, 0.98);
+        const dark = rand() < 0.45;
+        p6Spot(g, p[0], p[1], 0.03 + rand() * 0.05, dark ? "rgba(190,64,0,0.22)" : "rgba(255,246,175,0.28)");
+    }
+
+    // Manchas solares com penumbra.
+    for (const s of [[-0.3, 0.2, 0.1], [0.35, -0.15, 0.07], [0.1, 0.45, 0.06]]) {
+        p6Spot(g, s[0], s[1], s[2] * 1.9, "rgba(150,45,0,0.5)");
+        p6Spot(g, s[0], s[1], s[2], "rgba(30,8,0,0.85)");
+    }
+
+    // Labaredas na borda.
+    for (let k = 0; k < 6; k++) {
+        const a = rand() * Math.PI * 2;
+        const rad = 0.16 + rand() * 0.12;
+        g.beginPath();
+        g.arc(Math.cos(a) * 0.98, Math.sin(a) * 0.98, rad, a + Math.PI * 0.62, a + Math.PI * 1.38);
+        g.strokeStyle = "rgba(255,236,130,0.85)";
+        g.lineWidth = 0.035;
+        g.lineCap = "round";
+        g.stroke();
+    }
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 11 — ESTRELA DE NÊUTRONS
+// ----------------------------------------------------------------
+function paintNeutronStar(g, rand) {
+    p6Background(g, "#04041a");
+
+    for (let i = 0; i < 40; i++) {
+        const p = p6Point(rand, 1);
+        p6Dot(g, p[0], p[1], 0.008 + rand() * 0.014, "rgba(210,230,255," + (0.3 + rand() * 0.5) + ")");
+    }
+
+    // Linhas do campo magnético.
+    g.save();
+    g.rotate(-0.5);
+    for (let i = 0; i < 5; i++) {
+        g.beginPath();
+        g.ellipse(0, 0, 0.95 - i * 0.05, 0.3 + i * 0.1, 0, 0, Math.PI * 2);
+        g.strokeStyle = hsl(200, 100, 70, 0.4 - i * 0.06);
+        g.lineWidth = 0.016;
+        g.stroke();
+    }
+
+    // Jatos polares.
+    const jet = g.createLinearGradient(0, -1.2, 0, 1.2);
+    jet.addColorStop(0, "rgba(120,200,255,0)");
+    jet.addColorStop(0.5, "rgba(190,235,255,0.95)");
+    jet.addColorStop(1, "rgba(120,200,255,0)");
+    g.fillStyle = jet;
+    g.fillRect(-0.025, -1.2, 0.05, 2.4);
+    g.fillStyle = "rgba(100,170,255,0.18)";
+    g.fillRect(-0.09, -1.2, 0.18, 2.4);
+    g.restore();
+
+    const halo = g.createRadialGradient(0, 0, 0, 0, 0, 0.75);
+    halo.addColorStop(0, "rgba(200,240,255,0.95)");
+    halo.addColorStop(0.3, "rgba(80,150,255,0.45)");
+    halo.addColorStop(1, "rgba(40,80,255,0)");
+    g.fillStyle = halo;
+    g.fillRect(-1, -1, 2, 2);
+
+    const core = g.createRadialGradient(0, 0, 0, 0, 0, 0.17);
+    core.addColorStop(0, "#ffffff");
+    core.addColorStop(0.7, "#d5f0ff");
+    core.addColorStop(1, "rgba(160,215,255,0)");
+    g.fillStyle = core;
+    g.beginPath();
+    g.arc(0, 0, 0.17, 0, Math.PI * 2);
+    g.fill();
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 12 — PULSAR (os feixes giratórios são desenhados a cada quadro)
+// ----------------------------------------------------------------
+function paintPulsar(g, rand) {
+    p6Background(g, "#0b0418");
+
+    for (let i = 0; i < 36; i++) {
+        const p = p6Point(rand, 1);
+        p6Dot(g, p[0], p[1], 0.008 + rand() * 0.012, "rgba(255,220,250," + (0.3 + rand() * 0.5) + ")");
+    }
+
+    // Ondas de rádio se afastando do núcleo.
+    for (let i = 1; i <= 7; i++) {
+        g.beginPath();
+        g.arc(0, 0, i * 0.14, 0, Math.PI * 2);
+        g.strokeStyle = hsl(310, 100, 70, 0.55 - i * 0.07);
+        g.lineWidth = 0.022;
+        g.stroke();
+    }
+
+    const halo = g.createRadialGradient(0, 0, 0, 0, 0, 0.6);
+    halo.addColorStop(0, "rgba(255,190,245,0.9)");
+    halo.addColorStop(0.35, "rgba(190,60,230,0.45)");
+    halo.addColorStop(1, "rgba(120,20,190,0)");
+    g.fillStyle = halo;
+    g.fillRect(-1, -1, 2, 2);
+
+    const core = g.createRadialGradient(0, 0, 0, 0, 0, 0.14);
+    core.addColorStop(0, "#ffffff");
+    core.addColorStop(1, "rgba(255,200,250,0)");
+    g.fillStyle = core;
+    g.beginPath();
+    g.arc(0, 0, 0.14, 0, Math.PI * 2);
+    g.fill();
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 13 — NEBULOSA
+// ----------------------------------------------------------------
+function paintNebula(g, rand) {
+    p6Background(g, "#05030f");
+
+    // Nuvens de gás somando luz.
+    const hues = [300, 330, 190, 265, 25];
+    g.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 46; i++) {
+        const p = p6Point(rand, 0.85);
+        const rad = 0.22 + rand() * 0.4;
+        const hue = hues[Math.floor(rand() * hues.length)];
+        const grad = g.createRadialGradient(p[0], p[1], 0, p[0], p[1], rad);
+        grad.addColorStop(0, hsl(hue, 90, 55, 0.3));
+        grad.addColorStop(1, hsl(hue, 90, 55, 0));
+        g.fillStyle = grad;
+        g.beginPath();
+        g.arc(p[0], p[1], rad, 0, Math.PI * 2);
+        g.fill();
+    }
+    g.globalCompositeOperation = "source-over";
+
+    // Faixas de poeira escura.
+    for (let i = 0; i < 12; i++) {
+        const p = p6Point(rand, 0.8);
+        p6Cloud(g, p[0], p[1], 0.2 + rand() * 0.15, 2 + rand(), rand() * Math.PI, "5,2,15", 0.5);
+    }
+
+    // Estrelas recém-nascidas.
+    for (let i = 0; i < 70; i++) {
+        const p = p6Point(rand, 0.97);
+        p6Dot(g, p[0], p[1], 0.008 + rand() * 0.016, "rgba(255,255,255," + (0.5 + rand() * 0.5) + ")");
+    }
+    p5Star(g, -0.25, -0.2, 0.26, 0.95);
+    p5Star(g, 0.3, 0.25, 0.2, 0.85);
+    p5Star(g, 0.05, 0.55, 0.14, 0.8);
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 14 — BURACO NEGRO
+// ----------------------------------------------------------------
+// Disco de acreção visto de lado: elipse com gradiente que esfria para fora.
+function paintAccretionDisk(g, frontOnly) {
+    g.save();
+    g.rotate(-0.25);
+    if (frontOnly) {
+        g.beginPath();
+        g.rect(-2, 0, 4, 2);
+        g.clip();
+    }
+    g.scale(1, 0.24);
+
+    const disk = g.createRadialGradient(0, 0, 0.42, 0, 0, 0.98);
+    disk.addColorStop(0, "rgba(255,240,200,0)");
+    disk.addColorStop(0.08, "rgba(255,245,215,1)");
+    disk.addColorStop(0.3, "rgba(255,150,40,0.95)");
+    disk.addColorStop(0.7, "rgba(190,50,10,0.55)");
+    disk.addColorStop(1, "rgba(120,20,0,0)");
+    g.fillStyle = disk;
+    g.beginPath();
+    g.arc(0, 0, 0.98, 0, Math.PI * 2);
+    g.fill();
+    g.restore();
+}
+
+function paintBlackHole(g, rand) {
+    p6Background(g, "#020006");
+
+    for (let i = 0; i < 45; i++) {
+        const p = p6Point(rand, 1);
+        p6Dot(g, p[0], p[1], 0.008 + rand() * 0.012, "rgba(255,255,255," + (0.25 + rand() * 0.5) + ")");
+    }
+
+    paintAccretionDisk(g, false);
+
+    // Horizonte de eventos.
+    p6Dot(g, 0, 0, 0.4, "#000000");
+
+    // Luz do disco entortada pela gravidade, passando por cima e por baixo.
+    g.save();
+    g.shadowColor = "#ff9a2a";
+    g.shadowBlur = g.canvas.width * 0.04;
+    g.beginPath();
+    g.arc(0, 0, 0.44, 0, Math.PI * 2);
+    g.strokeStyle = "rgba(255,196,110,0.9)";
+    g.lineWidth = 0.035;
+    g.stroke();
+    g.beginPath();
+    g.arc(0, 0, 0.52, Math.PI * 1.12, Math.PI * 1.88);
+    g.strokeStyle = "rgba(255,140,50,0.75)";
+    g.lineWidth = 0.07;
+    g.stroke();
+    g.restore();
+
+    p6Dot(g, 0, 0, 0.39, "#000000");
+
+    // A metade da frente do disco passa na frente do buraco.
+    paintAccretionDisk(g, true);
+}
+
+// ----------------------------------------------------------------
+// NÍVEL 15 — GALÁXIA (o sprite gira lentamente no jogo)
+// ----------------------------------------------------------------
+function paintGalaxy(g, rand) {
+    p6Background(g, "#03020c");
+
+    const gauss = function() { return (rand() + rand() + rand() - 1.5) / 1.5; };
+
+    for (let i = 0; i < 90; i++) {
+        const p = p6Point(rand, 1);
+        p6Dot(g, p[0], p[1], 0.006 + rand() * 0.01, "rgba(255,255,255," + (0.2 + rand() * 0.4) + ")");
+    }
+
+    g.globalCompositeOperation = "lighter";
+
+    // Halo azulado do disco.
+    const disk = g.createRadialGradient(0, 0, 0, 0, 0, 1);
+    disk.addColorStop(0, "rgba(120,150,255,0.22)");
+    disk.addColorStop(1, "rgba(60,80,200,0)");
+    g.fillStyle = disk;
+    g.fillRect(-1.1, -1.1, 2.2, 2.2);
+
+    // Brilho difuso dos braços espirais.
+    for (let arm = 0; arm < 2; arm++) {
+        for (let i = 0; i < 60; i++) {
+            const t = (i + 1) / 61;
+            const a = arm * Math.PI + 6.2 * t;
+            const r = 0.08 + 0.9 * t;
+            const x = Math.cos(a) * r, y = Math.sin(a) * r;
+            const grad = g.createRadialGradient(x, y, 0, x, y, 0.2);
+            grad.addColorStop(0, hsl(220 - 30 * (1 - t), 85, 62, 0.14));
+            grad.addColorStop(1, hsl(220, 80, 60, 0));
+            g.fillStyle = grad;
+            g.beginPath();
+            g.arc(x, y, 0.2, 0, Math.PI * 2);
+            g.fill();
+        }
+    }
+
+    // Estrelas dos braços: amarelas no centro, azuis nas pontas.
+    for (let arm = 0; arm < 2; arm++) {
+        for (let n = 0; n < 1500; n++) {
+            const t = Math.pow(rand(), 1.15);
+            const a = arm * Math.PI + 6.2 * t + gauss() * 0.42 * (1.15 - 0.6 * t);
+            const r = 0.06 + 0.9 * t + gauss() * 0.05;
+            const hue = 48 + (215 - 48) * Math.min(1, t * 1.15);
+            const pink = rand() < 0.04;
+            p6Dot(g, Math.cos(a) * r, Math.sin(a) * r, (0.006 + rand() * 0.016) * (1.4 - t * 0.6),
+                  pink ? hsl(335, 85, 68, 0.9) : hsl(hue, 85, 72, 0.55 + rand() * 0.45));
+        }
+    }
+
+    // Bojo central.
+    const bulge = g.createRadialGradient(0, 0, 0, 0, 0, 0.34);
+    bulge.addColorStop(0, "rgba(255,246,210,1)");
+    bulge.addColorStop(0.35, "rgba(255,205,110,0.7)");
+    bulge.addColorStop(1, "rgba(255,170,70,0)");
+    g.fillStyle = bulge;
+    g.beginPath();
+    g.arc(0, 0, 0.34, 0, Math.PI * 2);
+    g.fill();
+
+    g.globalCompositeOperation = "source-over";
+}
+
+// ----------------------------------------------------------------
+// ACABAMENTO COMUM — sombra do lado oposto à luz, borda e atmosfera
+// ----------------------------------------------------------------
+function paintPhase6Finish(g, opt) {
+    const night = opt.night;
+    const limb = opt.limb !== undefined ? opt.limb : 0.35 * night;
+
+    if (night > 0) {
+        // Terminador: o lado de baixo à direita fica na sombra.
+        const shade = g.createRadialGradient(-0.4, -0.45, 0.2, -0.4, -0.45, 1.6);
+        shade.addColorStop(0, "rgba(0,0,8,0)");
+        shade.addColorStop(0.55, "rgba(0,0,8,0)");
+        shade.addColorStop(0.85, "rgba(0,0,8," + (0.55 * night) + ")");
+        shade.addColorStop(1, "rgba(0,0,8," + (0.85 * night) + ")");
+        g.fillStyle = shade;
+        g.fillRect(-1.1, -1.1, 2.2, 2.2);
+    }
+
+    if (limb > 0) {
+        const edge = g.createRadialGradient(0, 0, 0.55, 0, 0, 1.02);
+        edge.addColorStop(0, "rgba(0,0,0,0)");
+        edge.addColorStop(1, "rgba(0,0,0," + limb + ")");
+        g.fillStyle = edge;
+        g.fillRect(-1.1, -1.1, 2.2, 2.2);
+    }
+
+    // Brilho de atmosfera na borda, mais forte no lado iluminado.
+    g.beginPath();
+    g.arc(0, 0, 0.955, 0, Math.PI * 2);
+    g.strokeStyle = "rgba(" + opt.rim + "," + (0.35 * opt.rimA) + ")";
+    g.lineWidth = 0.07;
+    g.stroke();
+
+    if (opt.arc !== false) {
+        g.beginPath();
+        g.arc(0, 0, 0.965, Math.PI * 0.95, Math.PI * 1.65);
+        g.strokeStyle = "rgba(" + opt.rim + "," + opt.rimA + ")";
+        g.lineWidth = 0.035;
+        g.stroke();
+    }
+}
+
+const PHASE6_PAINTERS = [
+    paintStardust, paintAsteroid, paintMoon, paintMars, paintVenus,
+    paintEarth, paintNeptune, paintJupiter, paintSaturn, paintSun,
+    paintNeutronStar, paintPulsar, paintNebula, paintBlackHole, paintGalaxy
+];
+
+const PHASE6_FINISH = [
+    {night: 0, rim: "190,160,255", rimA: 0.6},
+    {night: 0.9, rim: "220,200,180", rimA: 0.25},
+    {night: 0.95, rim: "255,255,255", rimA: 0.3},
+    {night: 0.9, rim: "255,170,120", rimA: 0.5},
+    {night: 0.8, rim: "255,235,170", rimA: 0.55},
+    {night: 0.9, rim: "130,190,255", rimA: 0.75},
+    {night: 0.85, rim: "140,170,255", rimA: 0.7},
+    {night: 0.85, rim: "255,225,190", rimA: 0.4},
+    {night: 0.5, rim: "255,235,190", rimA: 0.35},
+    {night: 0, limb: 0.35, rim: "255,170,60", rimA: 0.9},
+    {night: 0, rim: "120,200,255", rimA: 0.85},
+    {night: 0, rim: "255,120,230", rimA: 0.85},
+    {night: 0, rim: "220,140,255", rimA: 0.6},
+    {night: 0, rim: "255,170,80", rimA: 0.7},
+    {night: 0, rim: "160,190,255", rimA: 0.7, arc: false}
+];
+
+function renderPhase6Sprite(level) {
+    const r = LEVELS_P6[level].radius;
+    const size = Math.ceil(r * 2 * PHASE6_SPRITE_SCALE);
+    const half = size / 2;
+    const sprite = document.createElement("canvas");
+    sprite.width = size;
+    sprite.height = size;
+
+    // Coordenadas unitárias: o círculo da bola tem raio 1.
+    const g = sprite.getContext("2d");
+    g.setTransform(half, 0, 0, half, half, half);
+    g.beginPath();
+    g.arc(0, 0, 1, 0, Math.PI * 2);
+    g.clip();
+
+    PHASE6_PAINTERS[level](g, seededRandom(6000 + level * 91));
+    paintPhase6Finish(g, PHASE6_FINISH[level]);
+    return sprite;
+}
+
+function getPhase6Sprite(level) {
+    if (!phase6Sprites[level]) phase6Sprites[level] = renderPhase6Sprite(level);
+    return phase6Sprites[level];
+}
+
+function getPhase6Preview(level) {
+    if (!phase6Previews[level]) phase6Previews[level] = getPhase6Sprite(level).toDataURL();
+    return phase6Previews[level];
+}
+
+function buildPhase6Sprites() {
+    for (let i = 0; i < LEVELS_P6.length; i++) getPhase6Sprite(i);
+}
+
+// Efeitos animados por cima do sprite: pulso da estrela de nêutrons e feixes
+// giratórios do pulsar.
+function drawPhase6Glow(x, y, r, level) {
+    const t = Date.now() / 1000;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, r * 0.97, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.globalCompositeOperation = "lighter";
+
+    if (level === 10) {
+        const pulse = 0.5 + 0.5 * Math.sin(t * 6);
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 0.55);
+        glow.addColorStop(0, "rgba(190,235,255," + (0.3 + 0.4 * pulse) + ")");
+        glow.addColorStop(1, "rgba(120,190,255,0)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    } else {
+        ctx.translate(x, y);
+        ctx.rotate(t * 2.4);
+
+        for (const s of [1, -1]) {
+            const beam = ctx.createLinearGradient(0, 0, s * r, 0);
+            beam.addColorStop(0, "rgba(255,255,255,0.95)");
+            beam.addColorStop(0.5, "rgba(255,110,230,0.55)");
+            beam.addColorStop(1, "rgba(255,60,200,0)");
+            ctx.fillStyle = beam;
+            ctx.beginPath();
+            ctx.moveTo(0, -r * 0.05);
+            ctx.lineTo(s * r * 1.05, -r * 0.3);
+            ctx.lineTo(s * r * 1.05, r * 0.3);
+            ctx.lineTo(0, r * 0.05);
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+
+    ctx.restore();
+}
+
+function drawPhase6Ball(x, y, r, level) {
+    const sprite = getPhase6Sprite(level);
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    if (level === 14) {
+        // A galáxia gira devagar em torno do próprio centro.
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(Date.now() / 1000 * 0.18);
+        ctx.drawImage(sprite, -r, -r, r * 2, r * 2);
+        ctx.restore();
+    } else {
+        ctx.drawImage(sprite, x - r, y - r, r * 2, r * 2);
+    }
+
+    if (level === 10 || level === 11) drawPhase6Glow(x, y, r, level);
+}
+
+// Fundo de espaço desenhado uma vez e reaproveitado a cada quadro.
+function getStarfield() {
+    if (starfield && starfield.width === W && starfield.height === H) return starfield;
+
+    starfield = document.createElement("canvas");
+    starfield.width = W;
+    starfield.height = H;
+
+    const g = starfield.getContext("2d");
+    const rand = seededRandom(606);
+
+    const bg = g.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, "#0b0720");
+    bg.addColorStop(1, "#030611");
+    g.fillStyle = bg;
+    g.fillRect(0, 0, W, H);
+
+    // Manchas suaves de nebulosa ao fundo.
+    const clouds = [[0.2, 0.25, 190, "140,70,255"], [0.8, 0.55, 170, "40,120,255"], [0.35, 0.85, 200, "255,70,180"]];
+    for (const c of clouds) {
+        const grad = g.createRadialGradient(c[0] * W, c[1] * H, 0, c[0] * W, c[1] * H, c[2]);
+        grad.addColorStop(0, "rgba(" + c[3] + ",0.13)");
+        grad.addColorStop(1, "rgba(" + c[3] + ",0)");
+        g.fillStyle = grad;
+        g.fillRect(0, 0, W, H);
+    }
+
+    // Estrelas de vários tamanhos e tons.
+    for (let i = 0; i < 170; i++) {
+        const sx = rand() * W, sy = rand() * H;
+        const size = rand() < 0.88 ? 0.5 + rand() * 0.8 : 1.3 + rand() * 0.9;
+        const tone = rand();
+        const color = tone < 0.15 ? "170,200,255" : tone < 0.3 ? "255,225,190" : "255,255,255";
+        g.beginPath();
+        g.arc(sx, sy, size, 0, Math.PI * 2);
+        g.fillStyle = "rgba(" + color + "," + (0.35 + rand() * 0.6) + ")";
+        g.fill();
+    }
+
+    return starfield;
+}
+
+// ================================================================
 // RESIZE
 // ================================================================
 function resize() {
@@ -1468,7 +2412,12 @@ function resize() {
 function generateBallData() {
     let special = null;
     const roll = Math.random();
-    if (roll < CONFIG.specialChance) {
+    if (currentPhase >= 5) {
+        // Fases 5 e 6: prisma com o dobro da chance da fase 4 e mais bombas.
+        if (roll < CONFIG.latePrismChance) special = "prism";
+        else if (roll < CONFIG.latePrismChance + CONFIG.lateBombChance) special = "bomb";
+        else if (roll < CONFIG.latePrismChance + CONFIG.lateBombChance + CONFIG.lateRainbowChance) special = "rainbow";
+    } else if (roll < CONFIG.specialChance) {
         if (currentPhase === 4 && Math.random() < 0.35) special = "prism";
         else if (currentPhase === 3 && Math.random() < 0.35) special = "mirror";
         else special = Math.random() < 0.55 ? "rainbow" : "bomb";
@@ -1506,6 +2455,7 @@ function updatePreview() {
     else if (nextSpecial === "mirror") elNext.style.background = "linear-gradient(135deg,#F8FAFC,#94A3B8)";
     else if (nextSpecial === "prism") elNext.style.background = "linear-gradient(135deg,#F0F9FF,#0EA5E9)";
     else if (currentPhase === 5) elNext.style.background = "url(" + getPhase5Preview(nextLevel) + ") center / cover no-repeat";
+    else if (currentPhase === 6) elNext.style.background = "url(" + getPhase6Preview(nextLevel) + ") center / cover no-repeat";
     else elNext.style.background = LEVELS[nextLevel].color;
     const s = nextSpecial ? 22 : LEVELS[nextLevel].radius * 0.65;
     elNext.style.width = s + "px"; elNext.style.height = s + "px";
@@ -1815,6 +2765,7 @@ function endGame() {
     if (currentPhase === 3) currentHigh = highScore3;
     if (currentPhase === 4) currentHigh = highScore4;
     if (currentPhase === 5) currentHigh = highScore5;
+    if (currentPhase === 6) currentHigh = highScore6;
 
     if (score > currentHigh) {
         if (currentPhase === 1) {
@@ -1829,9 +2780,12 @@ function endGame() {
         } else if (currentPhase === 4) {
             highScore4 = score;
             localStorage.setItem("sc_high_4", highScore4.toString());
-        } else {
+        } else if (currentPhase === 5) {
             highScore5 = score;
             localStorage.setItem("sc_high_5", highScore5.toString());
+        } else {
+            highScore6 = score;
+            localStorage.setItem("sc_high_6", highScore6.toString());
         }
         isNew = true;
     }
@@ -1840,7 +2794,8 @@ function endGame() {
     elFinalRecord.textContent = currentPhase === 1 ? highScore1 :
                                  currentPhase === 2 ? highScore2 :
                                  currentPhase === 3 ? highScore3 :
-                                 currentPhase === 4 ? highScore4 : highScore5;
+                                 currentPhase === 4 ? highScore4 :
+                                 currentPhase === 5 ? highScore5 : highScore6;
     elRecord.textContent = elFinalRecord.textContent;
     elNewRecord.style.display = isNew ? "block" : "none";
     elHint.style.display = "none";
@@ -1857,7 +2812,7 @@ function endGame() {
 // ================================================================
 function setPhase(phase) {
     currentPhase = phase;
-    elContainer.classList.remove("phase-2", "phase-3", "phase-4", "phase-5");
+    elContainer.classList.remove("phase-2", "phase-3", "phase-4", "phase-5", "phase-6");
 
     if (phase === 1) {
         LEVELS = LEVELS_P1;
@@ -1878,12 +2833,18 @@ function setPhase(phase) {
         elContainer.classList.add("phase-4");
         elPhaseLabel.textContent = "FASE 4";
         elRecord.textContent = highScore4;
-    } else {
+    } else if (phase === 5) {
         LEVELS = LEVELS_P5;
         elContainer.classList.add("phase-5");
         elPhaseLabel.textContent = "FASE 5";
         elRecord.textContent = highScore5;
         buildPhase5Sprites();
+    } else {
+        LEVELS = LEVELS_P6;
+        elContainer.classList.add("phase-6");
+        elPhaseLabel.textContent = "FASE 6";
+        elRecord.textContent = highScore6;
+        buildPhase6Sprites();
     }
     restartGameOnly();
 }
@@ -1933,6 +2894,13 @@ function checkUnlocks() {
         elUnlockText.textContent = "Parabéns! Você alcançou " + CONFIG.phase5Unlock.toLocaleString("pt-BR") + " pontos e liberou a quinta fase.";
         elUnlockScreen.style.display = "flex"; updateMenuButtons();
     }
+    if (!phase6Unlocked && !unlockShown6 && currentPhase === 5 && score >= CONFIG.phase6Unlock) {
+        phase6Unlocked = true; localStorage.setItem("sc_unlocked_6", "1");
+        unlockShown6 = true; pendingUnlockPhase = 6;
+        elUnlockTitle.textContent = "Fase 6 Desbloqueada!";
+        elUnlockText.textContent = "Parabéns! Você alcançou " + CONFIG.phase6Unlock.toLocaleString("pt-BR") + " pontos e liberou a sexta fase.";
+        elUnlockScreen.style.display = "flex"; updateMenuButtons();
+    }
 }
 
 // ================================================================
@@ -1944,7 +2912,8 @@ function openMenu() {
     elMenuRec3.textContent = highScore3;
     elMenuRec4.textContent = highScore4;
     elMenuRec5.textContent = highScore5;
-    elMenuRecTotal.textContent = highScore1 + highScore2 + highScore3 + highScore4 + highScore5;
+    elMenuRec6.textContent = highScore6;
+    elMenuRecTotal.textContent = highScore1 + highScore2 + highScore3 + highScore4 + highScore5 + highScore6;
     updateMenuButtons();
     elMenuScreen.style.display = "flex";
 }
@@ -1992,6 +2961,16 @@ function updateMenuButtons() {
         elBtnPhase5.classList.add("locked");
         elBtnPhase5.querySelector(".lock-text").style.display = "inline";
         elBtnPhase5.classList.remove("active");
+    }
+
+    if (phase6Unlocked) {
+        elBtnPhase6.classList.remove("locked");
+        elBtnPhase6.querySelector(".lock-text").style.display = "none";
+        elBtnPhase6.classList.toggle("active", currentPhase === 6);
+    } else {
+        elBtnPhase6.classList.add("locked");
+        elBtnPhase6.querySelector(".lock-text").style.display = "inline";
+        elBtnPhase6.classList.remove("active");
     }
 }
 
@@ -2072,12 +3051,14 @@ function render() {
         shake *= 0.88;
     } else shake = 0;
 
-    if (currentPhase === 5) ctx.fillStyle = "#17202e";
+    if (currentPhase === 6) ctx.fillStyle = "#05060f";
+    else if (currentPhase === 5) ctx.fillStyle = "#17202e";
     else if (currentPhase === 4) ctx.fillStyle = "#bfdbfe";
     else if (currentPhase === 3) ctx.fillStyle = "#120810";
     else if (currentPhase === 2) ctx.fillStyle = "#0a1f1f";
     else ctx.fillStyle = "#0f0d1f";
     ctx.fillRect(0, 0, W, H);
+    if (currentPhase === 6) ctx.drawImage(getStarfield(), 0, 0);
 
     drawDanger();
     for (let i = 0; i < balls.length; i++) balls[i].draw();
@@ -2145,6 +3126,7 @@ elBtnPhase2.addEventListener("click", function(){ if(!phase2Unlocked) return; if
 elBtnPhase3.addEventListener("click", function(){ if(!phase3Unlocked) return; if(currentPhase===3){closeMenu();return;} setPhase(3); closeMenu(); });
 elBtnPhase4.addEventListener("click", function(){ if(!phase4Unlocked) return; if(currentPhase===4){closeMenu();return;} setPhase(4); closeMenu(); });
 elBtnPhase5.addEventListener("click", function(){ if(!phase5Unlocked) return; if(currentPhase===5){closeMenu();return;} setPhase(5); closeMenu(); });
+elBtnPhase6.addEventListener("click", function(){ if(!phase6Unlocked) return; if(currentPhase===6){closeMenu();return;} setPhase(6); closeMenu(); });
 elMenuGuideBtn.addEventListener("click", function(){ closeMenu(); elMechanicsGuide.style.display = "flex"; });
 elGuideClose.addEventListener("click", function(){ elMechanicsGuide.style.display = "none"; prepare(lastX); });
 
